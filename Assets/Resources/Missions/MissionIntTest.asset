@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d77b28c2d8e6ae48af5beacaedf61c2, type: 3}
+  m_Name: MissionIntTest
+  m_EditorClassIdentifier: 
+  <id>k__BackingField: MissionIntTest
+  displayName: MissionIntTestName
+  missionSequences:
+  - {fileID: 824177726977540955, guid: aaa7ad74d6e5bc34793f48c386cf9535, type: 3}
