@@ -1,15 +1,21 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class MissionManager : MonoBehaviour
 {
-    private Dictionary<string, Mission> missionsDictionary;
+    [SerializeField] public List<string> OngoingMissions => ongoingMissions;
+    [SerializeField] public List<string> FinishedMissions => finishedMissions;
+
+    private Dictionary<string, Mission> availableMissions;
+    private List<string> ongoingMissions;
+    private List<string> finishedMissions;
 
     //MonoBehaviour LOOP
     private void Awake()
     {
-        missionsDictionary = CreateMissionsDictionary();
+        availableMissions = CreateAvailableMissionsDictionary();
     }
 
     private void OnEnable()
@@ -28,7 +34,14 @@ public class MissionManager : MonoBehaviour
 
     private void Start()
     {
-        foreach (Mission mission in missionsDictionary.Values)
+        //check any available missions
+
+        //make missions that satisfy it's requirements ready
+
+        //wait for 'quest point' to make the missions ongoing
+
+        //TEMP mission start
+        foreach (Mission mission in availableMissions.Values)
         {
             EventManager.Instance.missionEvents.MissionStateChange(mission);
         }
@@ -64,7 +77,7 @@ public class MissionManager : MonoBehaviour
     }
 
     //MISSION MANAGER FUNCTIONS
-    private Dictionary<string, Mission> CreateMissionsDictionary()
+    private Dictionary<string, Mission> CreateAvailableMissionsDictionary()
     {
         MissionInfo[] missionInfos = Resources.LoadAll<MissionInfo>("Missions");
 
@@ -84,9 +97,32 @@ public class MissionManager : MonoBehaviour
         return tempDictionary;
     }
 
+    private void AddOngoingMission(string id)
+    {
+        if(ongoingMissions.Contains(id))
+        {
+            Debug.LogError("Error, mission is already ongoing!");
+            return;
+        }
+
+        ongoingMissions.Add(id);
+    }
+
+    private void FinishOngoingMission(string id)
+    {
+        if(!ongoingMissions.Contains(id))
+        {
+            Debug.LogError("cannot find ongoing mission: " + id);
+            return;
+        }
+
+        finishedMissions.Add(id);
+        ongoingMissions.Remove(id);
+    }
+
     private Mission GetMissionById(string id)
     {
-        Mission mission = missionsDictionary[id];
+        Mission mission = availableMissions[id];
         if(mission == null)
         {
             Debug.LogError("ID " + id + " not found!");

@@ -9,7 +9,6 @@ public class Mission
     private MissionInfo missionInfo;
     private MissionState missionState; //CURRENTLY NOT UTILIZED YET
     private int currentMissionSequenceIndex;
-    private int totalMissionSequence;
 
     //MISSION CONSTRUCTOR
     public Mission(MissionInfo missionInfo)
@@ -17,27 +16,12 @@ public class Mission
         this.missionInfo = missionInfo;
         this.missionState = MissionState.Locked;
         this.currentMissionSequenceIndex = 0;
-        this.totalMissionSequence = missionInfo.missionSequences.Length;
     }
 
     //MISSION FUNCTIONS
     public void AdvanceMissionSequence()
     {
         currentMissionSequenceIndex++;
-
-
-    }
-
-    private GameObject GetCurrentMissionSequencePrefab()
-    {
-        GameObject missionSequencePrefab = GetMissionInfo().missionSequences[currentMissionSequenceIndex];
-
-        if (!NextSequenceAvailable())
-        {
-            Debug.LogWarning("No more mission sequence available!");
-        }
-
-        return missionSequencePrefab;
     }
 
     public void InstantiateCurrentMissionSequence(Transform parent)
@@ -70,6 +54,7 @@ public class Mission
 public enum MissionState
 {
     Locked,
-    Unlocked,
+    Ready,
+    Active,
     Finished
 }
