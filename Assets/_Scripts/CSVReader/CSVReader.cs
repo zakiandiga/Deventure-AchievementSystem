@@ -7,11 +7,27 @@ using UnityEngine.Networking;
 
 public class CSVReader : MonoBehaviour
 {
-    public string googleSheetDocId = "";
+    //Singleton
+    public static CSVReader Instance;
+
+    public List<Dictionary<string, object>> ConvertedData => convertedData;
+
+    [SerializeField] private string googleSheetDocId = "";
     private string url;
 
     private string downloadedData;
 
+    //list of missions in Google Sheet, Key = sheet header, Value = corresponding row value
+    private List<Dictionary<string, object>> convertedData = null;
+
+
+    private void Awake()
+    {
+        if(Instance == null)
+        {
+            Instance = this;
+        } 
+    }
 
     private void Start()
     {
@@ -32,7 +48,6 @@ public class CSVReader : MonoBehaviour
 
             if(webRequest.result == UnityWebRequest.Result.Success)
             {
-                Debug.Log("Download success!");
                 downloadedData = webRequest.downloadHandler.text;
             }
             else
@@ -53,9 +68,7 @@ public class CSVReader : MonoBehaviour
         }
 
         Debug.Log("DOWNLOAD SUCCESS!!!");
-        List<Dictionary<string, object>> dataAsList = CSVConverter.Read(data);
-
-        Debug.Log(dataAsList[0].Keys.Count);
+        convertedData = CSVConverter.Read(data); 
     }
 }
 
@@ -71,18 +84,16 @@ public class CSVConverter
 
         var lines = Regex.Split(csvText, LINE_SPLIT_RE);
 
-        if (lines.Length <= 1) return list;
+        if (lines.Length <= 1) 
+            return list;
 
         var header = Regex.Split(lines[0], SPLIT_RE);
 
-
-        // When we're done with this, we'll have 'list' which is a List of Dictionaries where each
-        // entry is a Dictionary where the key is the header, and the value (type obj for now),
-        // has been parsed into either an int, float, or string.
+        //Parse value as string, int, or float
         for (var i = 1; i < lines.Length; i++)
         {
-
             var values = Regex.Split(lines[i], SPLIT_RE);
+
             if (values.Length == 0 || values[0] == "") continue;
 
             var entry = new Dictionary<string, object>();

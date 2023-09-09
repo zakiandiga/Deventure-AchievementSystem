@@ -4,19 +4,26 @@ using UnityEngine;
 
 public class PlayerData : MonoBehaviour
 {
-    public int Gold => _gold;
-    public int Experience => _experience;
+    public int Gold => gold;
+    public int Experience => experience;
+    public int Level => level;
 
-    private int _gold = 0;
-    private int _experience = 0;
+    private int gold = 0;
+    private int experience = 0;
+    private int level = 1;
 
-    public void ModifyGold(int value)
+    //MAIN FUNCTIONS
+    public void AddGold(int value) => gold = Mathf.Max(0, gold + value);         
+
+    public void AddExperience(int value) => experience += value;
+
+    public void LevelUp()
     {
-        _gold = Mathf.Max(0, _gold + value);         
-    }
+        level += 1;
+        EventManager.Instance.ingameEvents.PlayerLevelUp(level);
+    } 
 
-    public void ModifyExperience(int value)
-    {
-        _experience += value;
-    }
+    //DEBUG FUNCTIONS
+    public void SetGold(int value) => gold = value;
+
 }

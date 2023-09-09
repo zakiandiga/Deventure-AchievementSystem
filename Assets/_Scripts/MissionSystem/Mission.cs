@@ -3,58 +3,149 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-public class Mission
+public class Mission : MonoBehaviour
 {
-    //MISSION VARIABLES
-    private MissionInfo missionInfo;
-    private MissionState missionState; //CURRENTLY NOT UTILIZED YET
-    private int currentMissionSequenceIndex;
+    //Properties
+    public string MissionId => missionId;
+    public string MissionName => missionName;
+    public int LevelRequirement => levelRequirement;
+    public string FinishedMissionsId => finishedMissionId;
+    public string EventId => eventId;
+    public string ObjectName => objectName;
+    public int ObjectiveAmount => objectiveAmount;
+    public string MissionDescription => missionDescription;
+    public MissionState MissionState => missionState;
 
-    //MISSION CONSTRUCTOR
-    public Mission(MissionInfo missionInfo)
+
+    //PRIVATE VARIABLES
+    private string missionId;
+    private string missionName;
+    private int levelRequirement;
+    private string finishedMissionId;
+    private string eventId;
+    private string objectName;
+    private int objectiveAmount;
+    private string missionDescription;
+    private MissionState missionState;
+
+    private MissionManager missionManager;
+
+
+    //INITIALIZER
+    public void InitializeMission(string id, string name, int levelReq, string finishedMissionId, string eventReq, string objName, int objAmount, string description)
     {
-        this.missionInfo = missionInfo;
-        this.missionState = MissionState.Locked;
-        this.currentMissionSequenceIndex = 0;
+        SetMissionState(MissionState.Locked);
+        SetMissionId(id);
+        SetName(name);
+        SetLevelRequirement(levelReq);
+        SetFinishedMissionsRequirementId(finishedMissionId);
+        SetEventId(eventReq);
+        //handle mission types suppose to be here
+        SetObjectName(objName);
+        SetObjectiveAmount(objAmount);
+        SetDescription(description);
+
+        missionManager = GetComponentInParent<MissionManager>();
+    }
+
+    //MONO BEHAVIOUR
+    private void Start()
+    {
+        PlayerLevelUpCheck(0);
+        IngameEvents.OnPlayerLevelUp += PlayerLevelUpCheck;
+        MissionEvents.OnMissionFinished += FinishMissionCheck;
+    }
+
+    private void OnDestroy()
+    {
+        IngameEvents.OnPlayerLevelUp -= PlayerLevelUpCheck;
+
     }
 
     //MISSION FUNCTIONS
-    public void AdvanceMissionSequence()
+    public void UnlockMission()
     {
-        currentMissionSequenceIndex++;
+        missionState = MissionState.Ready;
+
+        //For now UnlockedMission is automatically started
+        StartMission();
+        Debug.Log("UnlockedMission " + missionId);
     }
 
-    public void InstantiateCurrentMissionSequence(Transform parent)
+    /// <summary>
+    /// Start Mission is triggered by 'Mission Point'
+    /// </summary>
+    public void StartMission()
     {
-        GameObject missionSequencePrefab = GetMissionInfo().missionSequences[currentMissionSequenceIndex];
+        //create the instance of the missionActivity based on missionType
+        //for now, only int mission type available
 
-        if(missionSequencePrefab == null)
+        GameObject activity = new GameObject(ObjectName);
+        activity.transform.parent = this.transform;
+        
+        activity.AddComponent<MissionActivityInt>().InitializeActivity(EventId, ObjectName, ObjectiveAmount);
+        
+        missionState = MissionState.Active;
+        missionManager.MissionStart(MissionId);
+    }
+
+    public void FinishMission()
+    {
+        //Distribute reward
+        Debug.Log("Finished mission: " + MissionId);
+        missionState = MissionState.Finished;
+        missionManager.MissionFinish(MissionId);
+
+    }
+
+    //check if mission is unlockable by FinishMission() of other mission. Doesn't check for player level at the moment
+    private void FinishMissionCheck(string id)
+    {
+        GameObject finishedMission = missionManager.GetMissionById(id);
+        if (missionManager.FinishedMissions.Contains(finishedMission))
         {
-            Debug.LogError("No more mission sequence available!");
-            return;
+            UnlockMission();
         }
-
-        //consider pooling for this
-        MissionSequence missionSequence = Object.Instantiate<GameObject>(missionSequencePrefab, parent).GetComponent<MissionSequence>();
-        missionSequence.InitializeMissionSequence(GetMissionInfo().id);
     }
 
-    //MISSION PUBLIC GETTER
-    public MissionInfo GetMissionInfo() => missionInfo;
-
-    public MissionState GetMissionState() => missionState;
-
-    public bool NextSequenceAvailable()
+    //check if mission is unlockable by level up
+    private void PlayerLevelUpCheck(int level)
     {
-        return currentMissionSequenceIndex < missionInfo.missionSequences.Length;
+        //REFACTOR THIS
+        if (levelRequirement >= level)
+        {             
+            if (finishedMissionId == "none")
+            {
+                UnlockMission();
+                return;
+            }
+
+            GameObject missionToCheck = missionManager.GetMissionById(finishedMissionId);
+            if (missionManager.FinishedMissions.Contains(missionToCheck))
+            {
+                UnlockMission();
+                return;
+            }
+        }
     }
 
+
+    //PUBLIC SETTER
+    public void SetMissionState(MissionState state) => missionState = state;
+    public void SetMissionId(string missionId) => this.missionId = missionId;
+    public void SetName(string nameToSet) => missionName = nameToSet;
+    public void SetLevelRequirement(int level) => levelRequirement = level;
+    public void SetFinishedMissionsRequirementId(string missionId) => finishedMissionId = missionId;
+    public void SetEventId(string eventIdToSet) => eventId = eventIdToSet;
+    public void SetObjectName(string objectNameToSet) => objectName = objectNameToSet;
+    public void SetObjectiveAmount(int amountToSet) => objectiveAmount = amountToSet;
+    public void SetDescription(string descriptionToSet) => missionDescription = descriptionToSet;
 }
 
 public enum MissionState
 {
-    Locked,
-    Ready,
-    Active,
-    Finished
+    Locked, //mission doesn't interact with the main system
+    Ready, //mission can be initiated from the 'mission point'
+    Active, //mission is started, listening to progress on the main system
+    Finished //similar to Locked but marked finish and can be used for checking requirement
 }
