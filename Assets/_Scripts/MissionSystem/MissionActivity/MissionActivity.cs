@@ -13,7 +13,6 @@ public abstract class MissionActivity : MonoBehaviour
 
     protected void FinishActivity()
     {
-        Debug.Log("Finished activity");
         Destroy(gameObject);
     }
 }

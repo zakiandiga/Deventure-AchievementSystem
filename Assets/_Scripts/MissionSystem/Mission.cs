@@ -51,23 +51,27 @@ public class Mission : MonoBehaviour
     //MONO BEHAVIOUR
     private void Start()
     {
-        PlayerLevelUpCheck(0);
-        IngameEvents.OnPlayerLevelUp += PlayerLevelUpCheck;
+        PlayerLevelUpCheck(0); //FIND A WAY TO START THE MISSION AUTOMATION
+        //IngameEvents.OnPlayerLevelUp += PlayerLevelUpCheck;
         MissionEvents.OnMissionFinished += FinishMissionCheck;
     }
 
     private void OnDestroy()
     {
-        IngameEvents.OnPlayerLevelUp -= PlayerLevelUpCheck;
+        //IngameEvents.OnPlayerLevelUp -= PlayerLevelUpCheck;
+        MissionEvents.OnMissionFinished -= FinishMissionCheck;
 
     }
 
     //MISSION FUNCTIONS
     public void UnlockMission()
     {
+        if (missionState == MissionState.Finished)
+            return;
+
         missionState = MissionState.Ready;
 
-        //For now UnlockedMission is automatically started
+        //For now unlocked mission is automatically started
         StartMission();
         Debug.Log("UnlockedMission " + missionId);
     }
@@ -102,13 +106,15 @@ public class Mission : MonoBehaviour
     private void FinishMissionCheck(string id)
     {
         GameObject finishedMission = missionManager.GetMissionById(id);
-        if (missionManager.FinishedMissions.Contains(finishedMission))
+        
+        if(finishedMission.GetComponent<Mission>().MissionId == this.finishedMissionId)
         {
             UnlockMission();
         }
     }
 
     //check if mission is unlockable by level up
+    //Might not need this in automation
     private void PlayerLevelUpCheck(int level)
     {
         //REFACTOR THIS

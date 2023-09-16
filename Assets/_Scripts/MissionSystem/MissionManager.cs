@@ -22,16 +22,6 @@ public class MissionManager : MonoBehaviour
         StartCoroutine(TryFetchAvailableMissions());
     }
 
-    private void OnEnable()
-    {
-
-    }
-
-    private void OnDisable()
-    {
-
-    }
-
     //MISSION EVENT BROADCAST
     public void MissionStart(string id)
     {
@@ -54,7 +44,7 @@ public class MissionManager : MonoBehaviour
 
         while (tryFetchAttempt <= 100)
         {
-            missionDataFromCSV = CSVReader.Instance.ConvertedData;
+            missionDataFromCSV = CSVReader.instance.ConvertedData;
 
             if(missionDataFromCSV != null)
             {

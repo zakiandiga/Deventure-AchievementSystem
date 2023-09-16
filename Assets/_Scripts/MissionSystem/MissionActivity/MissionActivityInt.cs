@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Reflection;
+using Unity.VisualScripting;
 using UnityEditor.PackageManager;
 using UnityEngine;
 
@@ -28,8 +30,9 @@ public class MissionActivityInt : MissionActivity
         }
 
         eventHandler = (Action<string, int>)Delegate.CreateDelegate(typeof(Action<string, int>), this, "UpdateAmount");
-
         eventToSubscribe.AddEventHandler(null, eventHandler);
+
+        StartCoroutine(UpdateAmountRoutine());
     }
 
     public void InitializeActivity(string eventIdToInitialize, string objectName, int targetAmount)
@@ -38,6 +41,25 @@ public class MissionActivityInt : MissionActivity
         eventId = eventIdToInitialize;
         targetObject = objectName;
         requiredAmount = targetAmount;
+    }
+
+    private IEnumerator UpdateAmountRoutine()
+    {
+        while (currentAmount < requiredAmount)
+        {
+            currentAmount += 1;
+
+            Debug.Log("Updated " + targetObject + " amount by " + currentAmount);
+            Debug.Log(targetObject + ": CurrentAmount = " + currentAmount + " || " + "RequiredAmount = " + requiredAmount);
+            yield return null;
+        }
+
+        if (currentAmount >= requiredAmount)
+        {
+            eventToSubscribe.RemoveEventHandler(null, eventHandler);
+            mission.FinishMission();
+            FinishActivity();
+        }
     }
 
     //For now updated through IngameEvents triggered from KeyDown
