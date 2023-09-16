@@ -1,133 +1,107 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class MissionManager : MonoBehaviour
 {
-    [SerializeField] public List<string> OngoingMissions => ongoingMissions;
-    [SerializeField] public List<string> FinishedMissions => finishedMissions;
+    [SerializeField] public List<GameObject> OngoingMissions => ongoingMissions;
+    [SerializeField] public List<GameObject> FinishedMissions => finishedMissions;
+    [SerializeField] public List<GameObject> AvailableMissions => availableMissions;
 
-    private Dictionary<string, Mission> availableMissions;
-    private List<string> ongoingMissions;
-    private List<string> finishedMissions;
+    //PRIVATE VARIABLES
+    private List<GameObject> availableMissions = new List<GameObject>();
+    private List<GameObject> ongoingMissions = new List<GameObject>();
+    private List<GameObject> finishedMissions = new List<GameObject>();
+    private List<Dictionary<string, object>> missionDataFromCSV;    
+    private int tryFetchAttempt = 0;
 
-    //MonoBehaviour LOOP
+    //MonoBehaviour
     private void Awake()
     {
-        availableMissions = CreateAvailableMissionsDictionary();
+        StartCoroutine(TryFetchAvailableMissions());
     }
 
-    private void OnEnable()
+    //MISSION EVENT BROADCAST
+    public void MissionStart(string id)
     {
-        EventManager.Instance.missionEvents.OnMissionStarted += StartMission;
-        EventManager.Instance.missionEvents.OnMissionFinished += FinishMission;
-        EventManager.Instance.missionEvents.OnMissionAdvanced += AdvanceMission;
+        EventManager.Instance.missionEvents.StartMission(id);
+        ongoingMissions.Add(GetMissionById(id));
     }
 
-    private void OnDisable()
+    public void MissionFinish(string id)
     {
-        EventManager.Instance.missionEvents.OnMissionStarted -= StartMission;
-        EventManager.Instance.missionEvents.OnMissionFinished -= FinishMission;
-        EventManager.Instance.missionEvents.OnMissionAdvanced -= AdvanceMission;
-    }
-
-    private void Start()
-    {
-        //check any available missions
-
-        //make missions that satisfy it's requirements ready
-
-        //wait for 'quest point' to make the missions ongoing
-
-        //TEMP mission start
-        foreach (Mission mission in availableMissions.Values)
-        {
-            EventManager.Instance.missionEvents.MissionStateChange(mission);
-        }
-    }
-
-
-    //DELEGATES
-    private void StartMission(string id)
-    {
-        Mission mission = GetMissionById(id);
-        mission.InstantiateCurrentMissionSequence(this.transform);
-        Debug.Log(mission.GetMissionInfo().displayName + " IS STARTED");
-    }
-
-    private void FinishMission(string id)
-    {
-        Mission mission = GetMissionById(id);
-
-        Debug.Log(mission.GetMissionInfo().displayName + " IS FINISHED");
-    }
-
-    private void AdvanceMission(string id)
-    {
-        Mission mission = GetMissionById(id);
-        mission.AdvanceMissionSequence();
-        if(!mission.NextSequenceAvailable())
-        {
-            FinishMission(id);
-            return;
-        }
-
-        mission.InstantiateCurrentMissionSequence(this.transform);
+        EventManager.Instance.missionEvents.FinishMission(id);
+        finishedMissions.Add(GetMissionById(id));
+        ongoingMissions.Remove(GetMissionById(id));
     }
 
     //MISSION MANAGER FUNCTIONS
-    private Dictionary<string, Mission> CreateAvailableMissionsDictionary()
+    private IEnumerator TryFetchAvailableMissions()
     {
-        MissionInfo[] missionInfos = Resources.LoadAll<MissionInfo>("Missions");
+        tryFetchAttempt++;
+        Debug.Log("Attempt no. " + tryFetchAttempt);
 
-        Dictionary<string, Mission> tempDictionary = new Dictionary<string, Mission>();
-
-        foreach (MissionInfo missionInfo in missionInfos)
+        while (tryFetchAttempt <= 100)
         {
-            if(tempDictionary.ContainsKey(missionInfo.id))
+            missionDataFromCSV = CSVReader.instance.ConvertedData;
+
+            if(missionDataFromCSV != null)
             {
-                Debug.LogWarning("Duplicated mission ID found");
+                Debug.Log("Fetch Available Missions Success");
+                PopulateMissions();
+                break;
             }
 
-            Mission missionToAdd = new Mission(missionInfo);
-            tempDictionary.Add(missionInfo.id, missionToAdd);
+            yield return null;
         }
 
-        return tempDictionary;
+        if(AvailableMissions == null && tryFetchAttempt >= 100)
+        {
+            Debug.LogError("Failed to fetch available mission from CSVReader");
+        }
     }
 
-    private void AddOngoingMission(string id)
+    private void PopulateMissions()
     {
-        if(ongoingMissions.Contains(id))
+        Debug.Log("Start Populating missions");
+
+        for (int i = 0; i < missionDataFromCSV.Count; ++i)
         {
-            Debug.LogError("Error, mission is already ongoing!");
-            return;
+            string missionId = (string)missionDataFromCSV[i]["Id"];
+            GameObject missionObj = new GameObject(missionId);
+            missionObj.transform.parent = transform;
+
+            Mission mission = missionObj.AddComponent<Mission>();
+            mission.InitializeMission(
+                missionId,
+                (string)missionDataFromCSV[i]["MissionName"],
+                (int)missionDataFromCSV[i]["Level"],
+                (string)missionDataFromCSV[i]["FinishedMission"],
+                (string)missionDataFromCSV[i]["EventId"],
+                //Set mission type as well
+                (string)missionDataFromCSV[i]["Object"],
+                (int)missionDataFromCSV[i]["Amount"],
+                (string)missionDataFromCSV[i]["Description"]
+                );
+
+            availableMissions.Add(missionObj);
         }
 
-        ongoingMissions.Add(id);
+        Debug.Log("Populate Missions Complete!");
     }
 
-    private void FinishOngoingMission(string id)
+    public GameObject GetMissionById(string id)
     {
-        if(!ongoingMissions.Contains(id))
+        foreach(GameObject mission in AvailableMissions)
         {
-            Debug.LogError("cannot find ongoing mission: " + id);
-            return;
+            if (mission.GetComponent<Mission>().MissionId == id)
+            {
+                return mission;
+            }            
         }
 
-        finishedMissions.Add(id);
-        ongoingMissions.Remove(id);
-    }
-
-    private Mission GetMissionById(string id)
-    {
-        Mission mission = availableMissions[id];
-        if(mission == null)
-        {
-            Debug.LogError("ID " + id + " not found!");
-        }
-
-        return mission;
+        Debug.LogError("FAILED TO GET MISSION BY ID");
+        return null;
     }
 }
