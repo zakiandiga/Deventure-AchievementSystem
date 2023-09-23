@@ -10,7 +10,7 @@ public class CSVReader : MonoBehaviour
     //Singleton
     public static CSVReader instance;
 
-    public List<Dictionary<string, object>> ConvertedData => convertedData;
+    public List<Dictionary<string, string>> ConvertedData => convertedData;
 
     [SerializeField] private string googleSheetDocId = "";
     private string url;
@@ -18,7 +18,7 @@ public class CSVReader : MonoBehaviour
     private string downloadedData;
 
     //list of missions in Google Sheet, Key = sheet header, Value = corresponding row value
-    private List<Dictionary<string, object>> convertedData = null;
+    private List<Dictionary<string, string>> convertedData = null;
 
 
     private void Awake()
@@ -78,9 +78,9 @@ public class CSVConverter
     static string LINE_SPLIT_RE = @"\r\n|\n\r|\n|\r";
     static char[] TRIM_CHARS = { '\"' };
 
-    public static List<Dictionary<string, object>> Read(string csvText)
+    public static List<Dictionary<string, string>> Read(string csvText)
     {
-        var list = new List<Dictionary<string, object>>();
+        var list = new List<Dictionary<string, string>>();
 
         var lines = Regex.Split(csvText, LINE_SPLIT_RE);
 
@@ -96,7 +96,7 @@ public class CSVConverter
 
             if (values.Length == 0 || values[0] == "") continue;
 
-            var entry = new Dictionary<string, object>();
+            var entry = new Dictionary<string, string>();
             for (var j = 0; j < header.Length && j < values.Length; j++)
             {
                 string value = values[j];
@@ -112,7 +112,8 @@ public class CSVConverter
                 {
                     finalvalue = f;
                 }
-                entry[header[j]] = finalvalue;
+                //entry[header[j]] = finalvalue;
+                entry[header[j]] = value;
             }
             list.Add(entry);
         }

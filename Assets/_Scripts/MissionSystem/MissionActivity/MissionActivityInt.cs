@@ -49,8 +49,10 @@ public class MissionActivityInt : MissionActivity
         {
             currentAmount += 1;
 
-            Debug.Log("Updated " + targetObject + " amount by " + currentAmount);
-            Debug.Log(targetObject + ": CurrentAmount = " + currentAmount + " || " + "RequiredAmount = " + requiredAmount);
+            Debug.Log(mission.GetComponent<Mission>().MissionId + ": CurrentAmount = " + currentAmount + " || " + "RequiredAmount = " + requiredAmount);
+
+            yield return new WaitForSeconds(0.3f);
+
             yield return null;
         }
 

@@ -13,13 +13,14 @@ public class MissionManager : MonoBehaviour
     private List<GameObject> availableMissions = new List<GameObject>();
     private List<GameObject> ongoingMissions = new List<GameObject>();
     private List<GameObject> finishedMissions = new List<GameObject>();
-    private List<Dictionary<string, object>> missionDataFromCSV;    
+    private List<Dictionary<string, string>> missionDataFromCSV;    
     private int tryFetchAttempt = 0;
 
     //MonoBehaviour
     private void Awake()
     {
-        StartCoroutine(TryFetchAvailableMissions());
+        //StartCoroutine(TryFetchAvailableMissions());
+        StartCoroutine(TryFetchAvailableMissions02());
     }
 
     //MISSION EVENT BROADCAST
@@ -34,10 +35,13 @@ public class MissionManager : MonoBehaviour
         EventManager.Instance.missionEvents.FinishMission(id);
         finishedMissions.Add(GetMissionById(id));
         ongoingMissions.Remove(GetMissionById(id));
+
+        CheckAllComplete();
     }
 
     //MISSION MANAGER FUNCTIONS
-    private IEnumerator TryFetchAvailableMissions()
+
+    private IEnumerator TryFetchAvailableMissions02()
     {
         tryFetchAttempt++;
         Debug.Log("Attempt no. " + tryFetchAttempt);
@@ -46,49 +50,78 @@ public class MissionManager : MonoBehaviour
         {
             missionDataFromCSV = CSVReader.instance.ConvertedData;
 
-            if(missionDataFromCSV != null)
+            if (missionDataFromCSV != null)
             {
                 Debug.Log("Fetch Available Missions Success");
-                PopulateMissions();
+                PopulateMissions02();
                 break;
             }
 
             yield return null;
         }
 
-        if(AvailableMissions == null && tryFetchAttempt >= 100)
+        if (AvailableMissions == null && tryFetchAttempt >= 100)
         {
             Debug.LogError("Failed to fetch available mission from CSVReader");
         }
     }
 
-    private void PopulateMissions()
+    private void PopulateMissions02()
     {
-        Debug.Log("Start Populating missions");
+        Debug.Log("Start populating mission 02");
+        //string description = (string)missionDataFromCSV[1]["description"];
 
-        for (int i = 0; i < missionDataFromCSV.Count; ++i)
+
+        for(int i = 0; i < missionDataFromCSV.Count; ++i)
         {
-            string missionId = (string)missionDataFromCSV[i]["Id"];
-            GameObject missionObj = new GameObject(missionId);
-            missionObj.transform.parent = transform;
+            string missionId = (string)missionDataFromCSV[i]["id"];
+            GameObject missionObject = new GameObject(missionId);
+            missionObject.transform.parent = this.transform;
 
-            Mission mission = missionObj.AddComponent<Mission>();
-            mission.InitializeMission(
-                missionId,
-                (string)missionDataFromCSV[i]["MissionName"],
-                (int)missionDataFromCSV[i]["Level"],
-                (string)missionDataFromCSV[i]["FinishedMission"],
-                (string)missionDataFromCSV[i]["EventId"],
-                //Set mission type as well
-                (string)missionDataFromCSV[i]["Object"],
-                (int)missionDataFromCSV[i]["Amount"],
-                (string)missionDataFromCSV[i]["Description"]
-                );
+            Mission02 mission = missionObject.AddComponent<Mission02>();
+            mission.InitializeMission(missionDataFromCSV[i]["id"], missionDataFromCSV[i]["unlocked"], missionDataFromCSV[i]["description"]);
 
-            availableMissions.Add(missionObj);
+            for (int j = 1; ; j++)
+            {
+                string lhsKey = $"lhs{j}";
+                string opKey = $"op{j}";
+                string rhsKey = $"rhs{j}";
+
+                if (!missionDataFromCSV[i].ContainsKey(lhsKey))
+                {
+                    //Debug.Log("row " + i + " doesn't have " + lhsKey);
+                    break;
+                }
+
+                if (string.IsNullOrEmpty((string)missionDataFromCSV[i][lhsKey]))
+                {
+                    //Debug.Log("row " + i + " " + lhsKey + " doesn't have value!!");
+                    break;
+                }
+
+                string lhsValue = missionDataFromCSV[i][lhsKey];
+                string opValue = missionDataFromCSV[i][opKey];
+                string rhsValue = missionDataFromCSV[i][rhsKey];
+                if(string.IsNullOrEmpty(rhsValue))
+                {
+                    rhsValue = "NULL";
+                }
+
+                mission.AddMissionAction(lhsValue, opValue, rhsValue);
+                
+            }
+
+            availableMissions.Add(missionObject);
+            mission.PrintMission();
+        }        
+    }  
+
+    private void CheckAllComplete()
+    {
+        if(FinishedMissions.Count >= AvailableMissions.Count)
+        {
+            Debug.Log("All mission finished!");
         }
-
-        Debug.Log("Populate Missions Complete!");
     }
 
     public GameObject GetMissionById(string id)
