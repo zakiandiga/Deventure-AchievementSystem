@@ -38,7 +38,7 @@ public class Mission02 : MonoBehaviour
             string op = missionActions[i].Op;
             string rhs = missionActions[i].Rhs;
 
-            Debug.Log(Id + "MissionAction" + (i + 1) + ": " + lhs + " " + op + " " + rhs);            
+            Debug.Log(Id + " MissionAction" + (i + 1) + ": " + lhs + " " + op + " " + rhs);            
         }
     }
 
