@@ -1,153 +1,85 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using UnityEngine;
 
 public class Mission : MonoBehaviour
 {
-    //Properties
-    public string MissionId => missionId;
-    public string MissionName => missionName;
-    public int LevelRequirement => levelRequirement;
-    public string FinishedMissionsId => finishedMissionId;
-    public string EventId => eventId;
-    public string ObjectName => objectName;
-    public int ObjectiveAmount => objectiveAmount;
-    public string MissionDescription => missionDescription;
+    //PUBLIC PROPERTIES
+    public string Id { get; private set; }
+    public bool Unlocked { get; private set; }
+    public string Description { get; private set; }
     public MissionState MissionState => missionState;
-
+    public List<MissionAction> MissionActions => missionActions;
 
     //PRIVATE VARIABLES
-    private string missionId;
-    private string missionName;
-    private int levelRequirement;
-    private string finishedMissionId;
-    private string eventId;
-    private string objectName;
-    private int objectiveAmount;
-    private string missionDescription;
-    private MissionState missionState;
+    [SerializeField]private List<MissionAction> missionActions = new List<MissionAction>();
+   
+    private MissionState missionState = MissionState.Locked;
 
     private MissionManager missionManager;
 
-
-    //INITIALIZER
-    public void InitializeMission(string id, string name, int levelReq, string finishedMissionId, string eventReq, string objName, int objAmount, string description)
+    public void InitializeMission(string id, string unlocked, string description)
     {
-        SetMissionState(MissionState.Locked);
-        SetMissionId(id);
-        SetName(name);
-        SetLevelRequirement(levelReq);
-        SetFinishedMissionsRequirementId(finishedMissionId);
-        SetEventId(eventReq);
-        //handle mission types suppose to be here
-        SetObjectName(objName);
-        SetObjectiveAmount(objAmount);
-        SetDescription(description);
+        this.Id = id;
+        this.Description = description;
+        this.Unlocked = int.Parse(unlocked) > 0;
+        this.missionState = int.Parse(unlocked) > 0 ? MissionState.Ready : MissionState.Locked;
 
         missionManager = GetComponentInParent<MissionManager>();
     }
 
-    //MONO BEHAVIOUR
-    private void Start()
+    public void AddMissionAction(string lhs, string op, string rhs)
     {
-        PlayerLevelUpCheck(0); //FIND A WAY TO START THE MISSION AUTOMATION
-        //IngameEvents.OnPlayerLevelUp += PlayerLevelUpCheck;
-        MissionEvents.OnMissionFinished += FinishMissionCheck;
+        MissionAction action = new MissionAction(lhs, op, rhs);
+        missionActions.Add(action);
     }
 
-    private void OnDestroy()
+    public void PrintMission()
     {
-        //IngameEvents.OnPlayerLevelUp -= PlayerLevelUpCheck;
-        MissionEvents.OnMissionFinished -= FinishMissionCheck;
+        Debug.Log("Mission ID: " + Id + " || Mission Unlocked: " + Unlocked + " || Mission Description: " + Description);
+        for (int i = 0; i < missionActions.Count; i++)
+        {
+            string lhs = missionActions[i].Lhs;
+            string op = missionActions[i].Op;
+            string rhs = missionActions[i].Rhs;
 
+            Debug.Log(Id + " MissionAction" + (i + 1) + ": " + lhs + " " + op + " " + rhs);            
+        }
     }
 
-    //MISSION FUNCTIONS
-    public void UnlockMission()
-    {
-        if (missionState == MissionState.Finished)
-            return;
-
-        missionState = MissionState.Ready;
-
-        //For now unlocked mission is automatically started
-        StartMission();
-        Debug.Log("UnlockedMission " + missionId);
-    }
-
-    /// <summary>
-    /// Start Mission is triggered by 'Mission Point'
-    /// </summary>
     public void StartMission()
     {
-        //create the instance of the missionActivity based on missionType
-        //for now, only int mission type available
+        if (missionState == MissionState.Active) return;
 
-        GameObject activity = new GameObject(ObjectName);
-        activity.transform.parent = this.transform;
-        
-        activity.AddComponent<MissionActivityInt>().InitializeActivity(EventId, ObjectName, ObjectiveAmount);
-        
         missionState = MissionState.Active;
-        missionManager.MissionStart(MissionId);
+        ExecuteMissionActions();
     }
 
-    public void FinishMission()
+    public void ExecuteMissionActions()
     {
-        //Distribute reward
-        Debug.Log("Finished mission: " + MissionId);
-        missionState = MissionState.Finished;
-        missionManager.MissionFinish(MissionId);
-
-    }
-
-    //check if mission is unlockable by FinishMission() of other mission. Doesn't check for player level at the moment
-    private void FinishMissionCheck(string id)
-    {
-        GameObject finishedMission = missionManager.GetMissionById(id);
-        
-        if(finishedMission.GetComponent<Mission>().MissionId == this.finishedMissionId)
+        Debug.Log("Executing mission: " + Id);
+        if(missionActions.Count <= 0)
         {
-            UnlockMission();
+            Debug.Log("Mission " + Id + " doesn't have missionActions!");
+            return;
         }
+        
+        for (int i = 0; i < missionActions.Count; i++)
+        {
+            missionActions[i].InitiateAction();
+            Debug.Log(Id + " MissionAction " + missionActions[i].Lhs + " initiated");
+        }        
+
+        missionState = MissionState.Finished;
+        missionManager.MissionFinish(Id);
     }
 
-    //check if mission is unlockable by level up
-    //Might not need this in automation
-    private void PlayerLevelUpCheck(int level)
-    {
-        //REFACTOR THIS
-        if (levelRequirement >= level)
-        {             
-            if (finishedMissionId == "none")
-            {
-                UnlockMission();
-                return;
-            }
-
-            GameObject missionToCheck = missionManager.GetMissionById(finishedMissionId);
-            if (missionManager.FinishedMissions.Contains(missionToCheck))
-            {
-                UnlockMission();
-                return;
-            }
-        }
-    }
-
-
-    //PUBLIC SETTER
-    public void SetMissionState(MissionState state) => missionState = state;
-    public void SetMissionId(string missionId) => this.missionId = missionId;
-    public void SetName(string nameToSet) => missionName = nameToSet;
-    public void SetLevelRequirement(int level) => levelRequirement = level;
-    public void SetFinishedMissionsRequirementId(string missionId) => finishedMissionId = missionId;
-    public void SetEventId(string eventIdToSet) => eventId = eventIdToSet;
-    public void SetObjectName(string objectNameToSet) => objectName = objectNameToSet;
-    public void SetObjectiveAmount(int amountToSet) => objectiveAmount = amountToSet;
-    public void SetDescription(string descriptionToSet) => missionDescription = descriptionToSet;
 }
 
+
+[System.Serializable]
 public enum MissionState
 {
     Locked, //mission doesn't interact with the main system

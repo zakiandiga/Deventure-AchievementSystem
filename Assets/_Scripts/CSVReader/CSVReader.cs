@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 public class CSVReader : MonoBehaviour
 {
     //Singleton
-    public static CSVReader instance;
+    public static CSVReader instance { get; private set; }
 
     public List<Dictionary<string, string>> ConvertedData => convertedData;
 
@@ -101,18 +101,7 @@ public class CSVConverter
             {
                 string value = values[j];
                 value = value.TrimStart(TRIM_CHARS).TrimEnd(TRIM_CHARS).Replace("\\", "");
-                object finalvalue = value;
-                int n;
-                float f;
-                if (int.TryParse(value, out n))
-                {
-                    finalvalue = n;
-                }
-                else if (float.TryParse(value, out f))
-                {
-                    finalvalue = f;
-                }
-                //entry[header[j]] = finalvalue;
+
                 entry[header[j]] = value;
             }
             list.Add(entry);
