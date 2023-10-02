@@ -16,7 +16,6 @@ public class MissionManager : MonoBehaviour
     private List<Dictionary<string, string>> missionDataFromCSV;    
     private int tryFetchAttempt = 0;
 
-    //MonoBehaviour
     private void Awake()
     {
         StartCoroutine(TryFetchAvailableMissions());
@@ -130,6 +129,9 @@ public class MissionManager : MonoBehaviour
             Mission missionComponent = ongoingMissions[i].GetComponent<Mission>();
             if(missionComponent.MissionState == MissionState.Ready)
             {
+                //make this clearer
+                //start and mission from Mission.cs
+                //mission manager only handle the mission lists related functionalities
                 MissionStart(missionComponent.Id);
                 missionComponent.StartMission();
             }
