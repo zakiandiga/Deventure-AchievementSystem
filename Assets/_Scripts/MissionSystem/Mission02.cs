@@ -4,7 +4,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class Mission02 : MonoBehaviour
+public class Mission02 : MonoBehaviour, IComparer< MissionField >
 {
     public string Id { get; private set; }
     public string Unlocked { get; private set; }
@@ -12,7 +12,8 @@ public class Mission02 : MonoBehaviour
     public List<MissionAction> MissionActions => missionActions;
 
     [SerializeField]private List<MissionAction> missionActions = new List<MissionAction>();
-
+    
+    private List< MissionField > fields = new List< MissionField >();
 
     public void InitializeMission(string id, string unlocked, string description)
     {
@@ -20,7 +21,30 @@ public class Mission02 : MonoBehaviour
         this.Unlocked = unlocked;
         this.Description = description;
     }
-
+    
+    public int Compare(MissionField lhs, MissionField rhs)
+    {
+        return string.Compare( lhs.Name, rhs.Name );
+    }
+    
+    public MissionField GetField(string nom)
+    {
+        MissionField field = new MissionField( nom, "" );
+        int index = fields.BinarySearch( 0, fields.Count, field, this );
+        
+        if (index < 0)
+        {
+            fields.Insert( ~index, field );
+            return field;
+        }
+        return fields[ index ];
+    }
+    
+    public bool Evaluate()
+    {
+        return true; // for now -- TODO: write out the full process of Mission Evaluation here
+    }
+    
     public void AddMissionAction(string lhs, string op, string rhs)
     {
         MissionAction action = new MissionAction(lhs, op, rhs);
@@ -40,21 +64,5 @@ public class Mission02 : MonoBehaviour
 
             Debug.Log(Id + "MissionAction" + (i + 1) + ": " + lhs + " " + op + " " + rhs);            
         }
-    }
-
-}
-
-[System.Serializable]
-public class MissionAction
-{
-    public string Lhs { get; set; }
-    public string Op { get; set; }
-    public string Rhs { get; set; }
-
-    public MissionAction(string lhs, string op, string rhs)
-    {
-        this.Lhs = lhs;
-        this.Op = op;
-        this.Rhs = rhs;
     }
 }

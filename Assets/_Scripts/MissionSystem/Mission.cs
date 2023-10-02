@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-// James writes an all-important comment.
-
 public class Mission : MonoBehaviour
 {
     //Properties
