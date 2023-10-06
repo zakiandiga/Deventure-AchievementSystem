@@ -31,7 +31,14 @@ public class CSVReader : MonoBehaviour
 
     private void Start()
     {
-        url = "https://docs.google.com/spreadsheets/d/" + googleSheetDocId + "/export?format=csv";
+#if UNITY_EDITOR
+        //InitiateDownloadSheet(googleSheetDocId);
+#endif
+    }
+
+    public void InitiateDownloadSheet(string sheetId)
+    {
+        url = "https://docs.google.com/spreadsheets/d/" + sheetId + "/export?format=csv";
 
         StartCoroutine(DownloadSheet(DownloadFollowup));
     }

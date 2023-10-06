@@ -71,7 +71,7 @@ public class Datum
 {
     private string Location { get; set; }
     private int Value { get; set; }
-    private Mission02 Target { get; set; }
+    private Mission Target { get; set; }
     private MissionField Field { get; set; } 
     
     public delegate string ReadString();
@@ -118,7 +118,7 @@ public class Datum
         return 0;
     }
     
-    public Datum(Mission02 owner, string operand)
+    public Datum(Mission owner, string operand)
     {
         Location = operand;
         AsString = new ReadString( ReadLocation );
@@ -140,14 +140,14 @@ public class Datum
             {
                 try
                 {
-                    Target = GameObject.Find( values[ 0 ] ).GetComponent< Mission02 >();
+                    Target = GameObject.Find( values[ 0 ] ).GetComponent< Mission >();
                 }
                 catch (Exception)
                 {
                     if (values.Length == 2)
                     {
                         GameObject missionObject = new GameObject( values[ 0 ] );
-                        Target = missionObject.AddComponent< Mission02 >();
+                        Target = missionObject.AddComponent< Mission >();
                         Target.InitializeMission( values[ 0 ], "0", "" );
                     }
                     else

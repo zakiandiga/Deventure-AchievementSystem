@@ -22,14 +22,9 @@ public class MissionManager : MonoBehaviour
     }
 
     //MISSION EVENT BROADCAST
-    public void MissionStart(string id)
+    public void MissionFinishCleanUp(string id)
     {
-        EventManager.Instance.missionEvents.StartMission(id);
-    }
-
-    public void MissionFinish(string id)
-    {
-        EventManager.Instance.missionEvents.FinishMission(id);
+        //update ongoing and finished mission list
         finishedMissions.Add(GetMissionById(id));
         ongoingMissions.Remove(GetMissionById(id));
 
@@ -108,8 +103,6 @@ public class MissionManager : MonoBehaviour
     //MISSION MANAGER GENERAL FUNCTIONS
     private void CheckReadyMissions()
     {
-        Debug.Log("CHECKING READY MISSIONS");
-
         foreach(GameObject mission in availableMissions)
         {
             Mission missionComponent = mission.GetComponent<Mission>();
@@ -117,6 +110,12 @@ public class MissionManager : MonoBehaviour
             {
                 ongoingMissions.Add(mission);
             }
+        }
+
+        if(OngoingMissions.Count <= 0)
+        {
+            Debug.Log("No ready mission available!");
+            return;
         }
 
         StartReadyMissions();
@@ -129,10 +128,6 @@ public class MissionManager : MonoBehaviour
             Mission missionComponent = ongoingMissions[i].GetComponent<Mission>();
             if(missionComponent.MissionState == MissionState.Ready)
             {
-                //make this clearer
-                //start and mission from Mission.cs
-                //mission manager only handle the mission lists related functionalities
-                MissionStart(missionComponent.Id);
                 missionComponent.StartMission();
             }
         }

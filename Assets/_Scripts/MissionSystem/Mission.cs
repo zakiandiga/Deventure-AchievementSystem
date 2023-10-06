@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class Mission : MonoBehaviour
+public class Mission : MonoBehaviour, IComparer<MissionField>
 {
     //PUBLIC PROPERTIES
     public string Id { get; private set; }
@@ -13,9 +13,12 @@ public class Mission : MonoBehaviour
     public MissionState MissionState => missionState;
     public List<MissionAction> MissionActions => missionActions;
 
+
     //PRIVATE VARIABLES
     [SerializeField]private List<MissionAction> missionActions = new List<MissionAction>();
    
+    private List<MissionField> missionFields = new List<MissionField>();
+
     private MissionState missionState = MissionState.Locked;
 
     private MissionManager missionManager;
@@ -38,7 +41,7 @@ public class Mission : MonoBehaviour
 
     public void PrintMission()
     {
-        Debug.Log("Mission ID: " + Id + " || Mission Unlocked: " + Unlocked + " || Mission Description: " + Description);
+        Debug.Log("Mission ID: " + Id + " | Mission Unlocked: " + Unlocked + " | Mission Description: " + Description);
         for (int i = 0; i < missionActions.Count; i++)
         {
             string lhs = missionActions[i].Lhs;
@@ -54,12 +57,26 @@ public class Mission : MonoBehaviour
         if (missionState == MissionState.Active) return;
 
         missionState = MissionState.Active;
+
+        Debug.Log("Starting mission: " + Id);
+
+        EventManager.Instance.missionEvents.StartMission(Id);
         ExecuteMissionActions();
     }
 
-    public void ExecuteMissionActions()
+    private void FinishMission()
     {
-        Debug.Log("Executing mission: " + Id);
+        missionState = MissionState.Finished;
+
+        Debug.Log("Finishing mission: " + Id);
+        
+        missionManager.MissionFinishCleanUp(Id);
+
+        EventManager.Instance.missionEvents.FinishMission(Id);
+    }
+
+    public void ExecuteMissionActions()
+    {        
         if(missionActions.Count <= 0)
         {
             Debug.Log("Mission " + Id + " doesn't have missionActions!");
@@ -69,13 +86,34 @@ public class Mission : MonoBehaviour
         for (int i = 0; i < missionActions.Count; i++)
         {
             missionActions[i].InitiateAction();
-            Debug.Log(Id + " MissionAction " + missionActions[i].Lhs + " initiated");
-        }        
+            Debug.Log("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
+        }
 
-        missionState = MissionState.Finished;
-        missionManager.MissionFinish(Id);
+        FinishMission();
     }
 
+    public int Compare(MissionField lhs, MissionField rhs)
+    {
+        return string.Compare(lhs.Name, rhs.Name);
+    }
+
+    public MissionField GetField(string nom)
+    {
+        MissionField field = new MissionField(nom, "");
+        int index = missionFields.BinarySearch(0, missionFields.Count, field, this);
+
+        if (index < 0)
+        {
+            missionFields.Insert(~index, field);
+            return field;
+        }
+        return missionFields[index];
+    }
+
+    public bool Evaluate()
+    {
+        return true; // for now -- TODO: write out the full process of Mission Evaluation here
+    }
 }
 
 
