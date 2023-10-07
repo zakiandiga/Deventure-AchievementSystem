@@ -11,11 +11,11 @@ public class Mission : MonoBehaviour, IComparer<MissionField>
     public bool Unlocked { get; private set; }
     public string Description { get; private set; }
     public MissionState MissionState => missionState;
-    public List<MissionAction> MissionActions => missionActions;
+    [SerializeField] public List<MissionAction> MissionActions => missionActions;
 
 
     //PRIVATE VARIABLES
-    [SerializeField]private List<MissionAction> missionActions = new List<MissionAction>();
+    private List<MissionAction> missionActions = new List<MissionAction>();
    
     private List<MissionField> missionFields = new List<MissionField>();
 
@@ -42,13 +42,15 @@ public class Mission : MonoBehaviour, IComparer<MissionField>
     public void PrintMission()
     {
         Debug.Log("Mission ID: " + Id + " | Mission Unlocked: " + Unlocked + " | Mission Description: " + Description);
+        EventManager.Instance.uiEvents.LogTextDisplay("Mission ID: " + Id + " | Mission Unlocked: " + Unlocked + " | Mission Description: " + Description);
         for (int i = 0; i < missionActions.Count; i++)
         {
             string lhs = missionActions[i].Lhs;
             string op = missionActions[i].Op;
             string rhs = missionActions[i].Rhs;
 
-            Debug.Log(Id + " MissionAction" + (i + 1) + ": " + lhs + " " + op + " " + rhs);            
+            Debug.Log(Id + " MissionAction" + (i + 1) + ": " + lhs + " " + op + " " + rhs);
+            EventManager.Instance.uiEvents.LogTextDisplay(Id + " MissionAction" + (i + 1) + ": " + lhs + " " + op + " " + rhs);
         }
     }
 
@@ -59,6 +61,7 @@ public class Mission : MonoBehaviour, IComparer<MissionField>
         missionState = MissionState.Active;
 
         Debug.Log("Starting mission: " + Id);
+        EventManager.Instance.uiEvents.LogTextDisplay("Starting mission: " + Id);
 
         EventManager.Instance.missionEvents.StartMission(Id);
         ExecuteMissionActions();
@@ -69,7 +72,9 @@ public class Mission : MonoBehaviour, IComparer<MissionField>
         missionState = MissionState.Finished;
 
         Debug.Log("Finishing mission: " + Id);
-        
+        EventManager.Instance.uiEvents.LogTextDisplay("Finishing mission: " + Id);
+
+
         missionManager.MissionFinishCleanUp(Id);
 
         EventManager.Instance.missionEvents.FinishMission(Id);
@@ -87,6 +92,7 @@ public class Mission : MonoBehaviour, IComparer<MissionField>
         {
             missionActions[i].InitiateAction();
             Debug.Log("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
+            EventManager.Instance.uiEvents.LogTextDisplay("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
         }
 
         FinishMission();

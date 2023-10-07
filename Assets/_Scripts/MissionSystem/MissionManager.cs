@@ -59,8 +59,9 @@ public class MissionManager : MonoBehaviour
     private void PopulateMissions()
     {
         Debug.Log("Start populating mission");
+        EventManager.Instance.uiEvents.LogTextDisplay("Start populating missions");
 
-        for(int i = 0; i < missionDataFromCSV.Count; ++i)
+        for (int i = 0; i < missionDataFromCSV.Count; ++i)
         {
             string missionId = (string)missionDataFromCSV[i]["id"];
             string unlocked = (missionDataFromCSV[i]["unlocked"] as string) ?? "0";

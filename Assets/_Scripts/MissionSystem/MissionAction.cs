@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
+[System.Serializable]
 public class MissionAction
 {
     public string Lhs { get; set; }
@@ -30,6 +31,7 @@ public class MissionAction
     }
 }
 
+[System.Serializable]
 public class MissionField
 {
     public string Name { get; private set; }
