@@ -52,7 +52,7 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
     }
 
     //MONO BEHAVIOUR
-    private void AddMissionAction(string lhs, string op, string rhs)
+    public void AddMissionAction(string lhs, string op, string rhs)
     {
         MissionAction action = new MissionAction( this, missionActions.Count + 1, lhs, op, rhs );
         missionActions.Add( action );
@@ -70,18 +70,11 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
 
         if (index < 0)
         {
-            missionFields.Insert(~index, field);
+            missionFields.Insert( ~index, field );
             return field;
         }
         
-        for (int i = 0; i < missionActions.Count; i++)
-        {
-            missionActions[i].InitiateAction();
-            Debug.Log("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
-            EventManager.Instance.uiEvents.LogTextDisplay("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
-        }
-
-        FinishMission();
+        return missionFields[ index ];
     }
 
     public bool Evaluate()
