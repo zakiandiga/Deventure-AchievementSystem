@@ -16,7 +16,6 @@ public class MissionManager : MonoBehaviour
     private List<Dictionary<string, string>> missionDataFromCSV;    
     private int tryFetchAttempt = 0;
 
-    //MonoBehaviour
     private void Awake()
     {
         StartCoroutine(TryFetchAvailableMissions());
@@ -25,16 +24,11 @@ public class MissionManager : MonoBehaviour
     //MISSION EVENT BROADCAST
  /*   public void MissionFinishCleanUp(string id)
     {
-        EventManager.Instance.missionEvents.StartMission(id);
-        ongoingMissions.Add(GetMissionById(id));
-    }
-
-    public void MissionFinish(string id)
-    {
-        EventManager.Instance.missionEvents.FinishMission(id);
+        //update ongoing and finished mission list
         finishedMissions.Add(GetMissionById(id));
         ongoingMissions.Remove(GetMissionById(id));
 
+        CheckReadyMissions();
         CheckAllComplete();
     }
 */
@@ -42,7 +36,6 @@ public class MissionManager : MonoBehaviour
     private IEnumerator TryFetchAvailableMissions()
     {
         tryFetchAttempt++;
-        Debug.Log("Attempt no. " + tryFetchAttempt);
 
         while (tryFetchAttempt <= 100)
         {
@@ -69,14 +62,16 @@ public class MissionManager : MonoBehaviour
         Debug.Log("Start populating mission");
         EventManager.Instance.uiEvents.LogTextDisplay("Start populating missions");
 
-        for(int i = 0; i < missionDataFromCSV.Count; ++i)
+        for (int i = 0; i < missionDataFromCSV.Count; ++i)
         {
             string missionId = (string)missionDataFromCSV[i]["id"];
+            string unlocked = (missionDataFromCSV[i]["unlocked"] as string) ?? "0";
+
             GameObject missionObject = new GameObject(missionId);
             missionObject.transform.parent = this.transform;
 
-            Mission mission = missionObject.AddComponent< Mission >();
-            mission.InitializeMission(missionDataFromCSV[i]["id"], missionDataFromCSV[i]["unlocked"], missionDataFromCSV[i]["description"]);
+            Mission mission = missionObject.AddComponent<Mission>();
+            mission.InitializeMission(missionId, unlocked, missionDataFromCSV[i]["description"]);
 
             for (int j = 1; ; j++)
             {
@@ -84,28 +79,20 @@ public class MissionManager : MonoBehaviour
                 string opKey = $"op{j}";
                 string rhsKey = $"rhs{j}";
 
-                if (!missionDataFromCSV[i].ContainsKey(lhsKey))
-                {
-                    //Debug.Log("row " + i + " doesn't have " + lhsKey);
-                    break;
-                }
+                if (!missionDataFromCSV[i].ContainsKey(lhsKey)) break;          
 
-                if (string.IsNullOrEmpty((string)missionDataFromCSV[i][lhsKey]))
-                {
-                    //Debug.Log("row " + i + " " + lhsKey + " doesn't have value!!");
-                    break;
-                }
-
+                if (string.IsNullOrEmpty((string)missionDataFromCSV[i][lhsKey])) break;
+                
                 string lhsValue = missionDataFromCSV[i][lhsKey];
                 string opValue = missionDataFromCSV[i][opKey];
                 string rhsValue = missionDataFromCSV[i][rhsKey];
+
                 if(string.IsNullOrEmpty(rhsValue))
                 {
                     rhsValue = "NULL";
                 }
 
-                mission.AddMissionAction(lhsValue, opValue, rhsValue);
-                
+                mission.AddMissionAction(lhsValue, opValue, rhsValue);                
             }
 
             availableMissions.Add(missionObject);
@@ -164,7 +151,7 @@ public class MissionManager : MonoBehaviour
     {
         foreach(GameObject mission in AvailableMissions)
         {
-            if (mission.GetComponent<Mission>().MissionId == id)
+            if (mission.GetComponent<Mission>().Id == id)
             {
                 return mission;
             }            

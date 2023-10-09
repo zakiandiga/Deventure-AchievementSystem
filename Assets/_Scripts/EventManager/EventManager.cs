@@ -8,6 +8,7 @@ public class EventManager : MonoBehaviour
 
     public IngameEvents ingameEvents;
     public MissionEvents missionEvents;
+    public UIEvents uiEvents;
 
     private void Awake()
     {
@@ -18,6 +19,6 @@ public class EventManager : MonoBehaviour
 
         ingameEvents = new IngameEvents();
         missionEvents = new MissionEvents();
-
+        uiEvents = new UIEvents();
     }
 }

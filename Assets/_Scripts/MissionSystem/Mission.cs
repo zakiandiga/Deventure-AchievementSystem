@@ -1,6 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using UnityEngine;
 
 public class Mission : MonoBehaviour, IComparer< MissionField >
@@ -25,6 +26,7 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
     }
     
     public MissionState MissionState => missionState;
+    [SerializeField] public List<MissionAction> MissionActions => missionActions;
 
 
     //PRIVATE VARIABLES
@@ -71,6 +73,15 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
             missionFields.Insert(~index, field);
             return field;
         }
+        
+        for (int i = 0; i < missionActions.Count; i++)
+        {
+            missionActions[i].InitiateAction();
+            Debug.Log("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
+            EventManager.Instance.uiEvents.LogTextDisplay("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
+        }
+
+        FinishMission();
     }
 
     public bool Evaluate()
@@ -92,6 +103,8 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
     }
 }
 
+
+[System.Serializable]
 public enum MissionState
 {
     Locked, //mission doesn't interact with the main system
