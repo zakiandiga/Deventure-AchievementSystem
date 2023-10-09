@@ -6,27 +6,32 @@ using UnityEngine;
 
 public class MissionAction
 {
-    public string Lhs { get; set; }
-    public string Op { get; set; }
-    public string Rhs { get; set; }
-    public bool ActionFinished { get; set; } //not sure if we need this
-
-    public MissionAction(string lhs, string op, string rhs)
+    public MissionField LHS;
+    
+    private MissionField OpField;
+    public string Op
     {
-        this.Lhs = lhs;
-        this.Op = op;
-        this.Rhs = rhs;
+        get { return OpField.AsString(); }
+        set { OpField.SetString( value ); }
+    }
+    
+    public MissionField RHS;
+
+    public MissionAction(Mission owner, int index, string lhs, string op, string rhs)
+    {
+        LHS = owner.GetField( "lhs" + index );
+        LHS.SetString( lhs );
+        
+        OpField = owner.GetField( "op" + index );
+        Op = op;
+        
+        RHS = owner.GetField( "rhs" + index );
+        RHS.SetString( rhs );
     }
 
-    public void InitiateAction()
+    public bool Evaluate()
     {
-        //check if variable exist
-
-        //Evaluate()
-        //Assign
-        //CheckCondition
-    
-        ActionFinished = true;
+        return true;
     }
 }
 
@@ -71,7 +76,7 @@ public class Datum
 {
     private string Location { get; set; }
     private int Value { get; set; }
-    private Mission02 Target { get; set; }
+    private Mission Target { get; set; }
     private MissionField Field { get; set; } 
     
     public delegate string ReadString();
@@ -118,7 +123,7 @@ public class Datum
         return 0;
     }
     
-    public Datum(Mission02 owner, string operand)
+    public Datum(Mission owner, string operand)
     {
         Location = operand;
         AsString = new ReadString( ReadLocation );
@@ -140,14 +145,14 @@ public class Datum
             {
                 try
                 {
-                    Target = GameObject.Find( values[ 0 ] ).GetComponent< Mission02 >();
+                    Target = GameObject.Find( values[ 0 ] ).GetComponent< Mission >();
                 }
                 catch (Exception)
                 {
                     if (values.Length == 2)
                     {
                         GameObject missionObject = new GameObject( values[ 0 ] );
-                        Target = missionObject.AddComponent< Mission02 >();
+                        Target = missionObject.AddComponent< Mission >();
                         Target.InitializeMission( values[ 0 ], "0", "" );
                     }
                     else

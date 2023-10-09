@@ -3,149 +3,93 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-public class Mission : MonoBehaviour
+public class Mission : MonoBehaviour, IComparer< MissionField >
 {
-    //Properties
-    public string MissionId => missionId;
-    public string MissionName => missionName;
-    public int LevelRequirement => levelRequirement;
-    public string FinishedMissionsId => finishedMissionId;
-    public string EventId => eventId;
-    public string ObjectName => objectName;
-    public int ObjectiveAmount => objectiveAmount;
-    public string MissionDescription => missionDescription;
+    //PUBLIC PROPERTIES
+    public string Id
+    {
+        get { return GetField( "id" ).AsString(); }
+        set { GetField( "id" ).SetString( value ); }
+    }
+    
+    public int Unlocked
+    {
+        get { return GetField( "unlocked" ).AsNumber(); }
+        set { GetField( "unlocked" ).SetString( "" + value ); }
+    }
+    
+    public string Description
+    {
+        get { return GetField( "description" ).AsString(); }
+        set { GetField( "description" ).SetString( value ); }
+    }
+    
     public MissionState MissionState => missionState;
 
 
     //PRIVATE VARIABLES
-    private string missionId;
-    private string missionName;
-    private int levelRequirement;
-    private string finishedMissionId;
-    private string eventId;
-    private string objectName;
-    private int objectiveAmount;
-    private string missionDescription;
-    private MissionState missionState;
+    private List<MissionAction> missionActions = new List<MissionAction>();
+    private List<MissionField> missionFields = new List<MissionField>();
+
+    private MissionState missionState = MissionState.Locked;
 
     private MissionManager missionManager;
 
+    public void InitializeMission(string id, string unlocked, string description)
+    {        
+        Id = id;
+        
+        int unlocked_number = int.Parse( unlocked );
+        Unlocked = unlocked_number;
+        
+        Description = description;
+        
+        this.missionState = unlocked_number != 0 ? MissionState.Ready : MissionState.Locked;
 
-    //INITIALIZER
-    public void InitializeMission(string id, string name, int levelReq, string finishedMissionId, string eventReq, string objName, int objAmount, string description)
-    {
-        SetMissionState(MissionState.Locked);
-        SetMissionId(id);
-        SetName(name);
-        SetLevelRequirement(levelReq);
-        SetFinishedMissionsRequirementId(finishedMissionId);
-        SetEventId(eventReq);
-        //handle mission types suppose to be here
-        SetObjectName(objName);
-        SetObjectiveAmount(objAmount);
-        SetDescription(description);
-
-        missionManager = GetComponentInParent<MissionManager>();
+        missionManager = GetComponentInParent< MissionManager >();
     }
 
     //MONO BEHAVIOUR
-    private void Start()
+    private void AddMissionAction(string lhs, string op, string rhs)
     {
-        PlayerLevelUpCheck(0); //FIND A WAY TO START THE MISSION AUTOMATION
-        //IngameEvents.OnPlayerLevelUp += PlayerLevelUpCheck;
-        MissionEvents.OnMissionFinished += FinishMissionCheck;
+        MissionAction action = new MissionAction( this, missionActions.Count + 1, lhs, op, rhs );
+        missionActions.Add( action );
     }
 
-    private void OnDestroy()
+    public int Compare(MissionField lhs, MissionField rhs)
     {
-        //IngameEvents.OnPlayerLevelUp -= PlayerLevelUpCheck;
-        MissionEvents.OnMissionFinished -= FinishMissionCheck;
-
+        return string.Compare( lhs.Name, rhs.Name );
     }
 
-    //MISSION FUNCTIONS
-    public void UnlockMission()
+    public MissionField GetField(string nom)
     {
-        if (missionState == MissionState.Finished)
-            return;
+        MissionField field = new MissionField( nom, "" );
+        int index = missionFields.BinarySearch( 0, missionFields.Count, field, this );
 
-        missionState = MissionState.Ready;
-
-        //For now unlocked mission is automatically started
-        StartMission();
-        Debug.Log("UnlockedMission " + missionId);
-    }
-
-    /// <summary>
-    /// Start Mission is triggered by 'Mission Point'
-    /// </summary>
-    public void StartMission()
-    {
-        //create the instance of the missionActivity based on missionType
-        //for now, only int mission type available
-
-        GameObject activity = new GameObject(ObjectName);
-        activity.transform.parent = this.transform;
-        
-        activity.AddComponent<MissionActivityInt>().InitializeActivity(EventId, ObjectName, ObjectiveAmount);
-        
-        missionState = MissionState.Active;
-        missionManager.MissionStart(MissionId);
-    }
-
-    public void FinishMission()
-    {
-        //Distribute reward
-        Debug.Log("Finished mission: " + MissionId);
-        missionState = MissionState.Finished;
-        missionManager.MissionFinish(MissionId);
-
-    }
-
-    //check if mission is unlockable by FinishMission() of other mission. Doesn't check for player level at the moment
-    private void FinishMissionCheck(string id)
-    {
-        GameObject finishedMission = missionManager.GetMissionById(id);
-        
-        if(finishedMission.GetComponent<Mission>().MissionId == this.finishedMissionId)
+        if (index < 0)
         {
-            UnlockMission();
+            missionFields.Insert(~index, field);
+            return field;
         }
     }
 
-    //check if mission is unlockable by level up
-    //Might not need this in automation
-    private void PlayerLevelUpCheck(int level)
+    public bool Evaluate()
     {
-        //REFACTOR THIS
-        if (levelRequirement >= level)
-        {             
-            if (finishedMissionId == "none")
-            {
-                UnlockMission();
-                return;
-            }
-
-            GameObject missionToCheck = missionManager.GetMissionById(finishedMissionId);
-            if (missionManager.FinishedMissions.Contains(missionToCheck))
-            {
-                UnlockMission();
-                return;
-            }
+        int i = 0;
+        while (i != missionActions.Count)
+        {
+            MissionAction action =  missionActions[i];
+            ++i;
+            
+            string output = Id + " MissionAction" + i + ": " + action.LHS.AsString() + " " + action.Op + " " + action.RHS.AsString();
+            Debug.Log( output );
+            EventManager.Instance.uiEvents.LogTextDisplay( output );
+            
+            if (action.Evaluate() == false) return false;
         }
+        
+        return true;
     }
-
-
-    //PUBLIC SETTER
-    public void SetMissionState(MissionState state) => missionState = state;
-    public void SetMissionId(string missionId) => this.missionId = missionId;
-    public void SetName(string nameToSet) => missionName = nameToSet;
-    public void SetLevelRequirement(int level) => levelRequirement = level;
-    public void SetFinishedMissionsRequirementId(string missionId) => finishedMissionId = missionId;
-    public void SetEventId(string eventIdToSet) => eventId = eventIdToSet;
-    public void SetObjectName(string objectNameToSet) => objectName = objectNameToSet;
-    public void SetObjectiveAmount(int amountToSet) => objectiveAmount = amountToSet;
-    public void SetDescription(string descriptionToSet) => missionDescription = descriptionToSet;
 }
 
 public enum MissionState
