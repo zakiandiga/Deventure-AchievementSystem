@@ -32,7 +32,85 @@ public class MissionAction
 
     public bool Evaluate()
     {
-        return true;
+        Datum lhs = new Datum( LHS.AsString() );
+        Datum rhs = new Datum( RHS.AsString() );
+        int lvalue = 0;
+        int rvalue = 0;
+        
+        switch (Op)
+        {
+            case "Subtract -=":
+                lhs.SetString( "" + (lhs.AsNumber() - rhs.AsNumber()) );
+                return true;
+                
+            case "Assign =":
+                lhs.SetString( rhs.AsString() );
+                return true;
+                
+            case "Add +=":
+                lhs.SetString( "" + (lhs.AsNumber() + rhs.AsNumber()) );
+                return true;
+                
+            case "Multiply *=":
+                lhs.SetString( "" + (lhs.AsNumber() * rhs.AsNumber()) );
+                return true;
+                
+            case "Divide /=":
+                rvalue = rhs.AsNumber();
+                if (rvalue == 0)
+                {
+                    Debug.LogError( "Division by 0." );
+                    return false;
+                }
+                
+                lhs.SetString( "" + (lhs.AsNumber() / rvalue) );
+                return true;
+                
+            case "Modulo %=":
+                rvalue = rhs.AsNumber();
+                if (rvalue == 0)
+                {
+                    Debug.LogError( "Division by 0." );
+                    return false;
+                }
+                
+                lhs.SetString( "" + (lhs.AsNumber() % rvalue) );
+                return true;
+                
+            case "IsEqual ==":
+                return lhs.AsString() == rhs.AsString();
+                
+            case "IsLesser <":
+                lvalue = lhs.AsNumber();
+                rvalue = lhs.AsNumber();
+                if (lvalue == rvalue) return string.Compare( lhs.AsString(), rhs.AsString() ) < 0;
+                return lvalue < rvalue;
+                
+            case "IsGreater >":
+                lvalue = lhs.AsNumber();
+                rvalue = lhs.AsNumber();
+                if (lvalue == rvalue) return string.Compare( lhs.AsString(), rhs.AsString() ) > 0;
+                return lvalue > rvalue;
+                
+            case "Not !":
+                rvalue = lhs.AsNumber();
+                bool notted = (rvalue == 0);
+                lhs.SetString( notted ? "1" : "0" );
+                return notted;
+                
+            case "RNGFrom":
+                var random = new System.Random();
+                int outcome = random.Next( new Datum( RHS.AsString() + ".lo" ).AsNumber(), new Datum( RHS.AsString() + ".hi" ).AsNumber() );
+                lhs.SetString( "" + outcome );
+                return true;
+                
+            case "Evaluate()":
+                return lhs.AsNumber() != 0;
+                
+            default:
+                Debug.LogError( "Unrecognized op." );
+                return false;
+        }
     }
 }
 
@@ -125,7 +203,7 @@ public class Datum
         return 0;
     }
     
-    public Datum(Mission owner, string operand)
+    public Datum(string operand)
     {
         Location = operand;
         AsString = new ReadString( ReadLocation );
