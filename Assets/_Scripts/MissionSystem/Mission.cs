@@ -91,9 +91,12 @@ public class Mission : MonoBehaviour, IComparer<MissionField>
         for (int i = 0; i < missionActions.Count; i++)
         {
             missionActions[i].InitiateAction();
+
             Debug.Log("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
             EventManager.Instance.uiEvents.LogTextDisplay("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
         }
+
+
 
         FinishMission();
     }

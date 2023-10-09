@@ -73,8 +73,8 @@ public class Datum
 {
     private string Location { get; set; }
     private int Value { get; set; }
-    private Mission Target { get; set; }
-    private MissionField Field { get; set; } 
+    private Mission Target { get; set; } //The mission this datum pointing towards
+    private MissionField Field { get; set; } //Field that the target possess (ID, Unlocked, Lhs, etc)
     
     public delegate string ReadString();
     public ReadString AsString;
