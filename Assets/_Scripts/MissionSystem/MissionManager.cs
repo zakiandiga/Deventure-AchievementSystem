@@ -5,14 +5,14 @@ using UnityEngine;
 
 public class MissionManager : MonoBehaviour
 {
-    [SerializeField] public List<GameObject> OngoingMissions => ongoingMissions;
-    [SerializeField] public List<GameObject> FinishedMissions => finishedMissions;
+//    [SerializeField] public List<GameObject> OngoingMissions => ongoingMissions;
+//    [SerializeField] public List<GameObject> FinishedMissions => finishedMissions;
     [SerializeField] public List<GameObject> AvailableMissions => availableMissions;
 
     //PRIVATE VARIABLES
     private List<GameObject> availableMissions = new List<GameObject>();
-    private List<GameObject> ongoingMissions = new List<GameObject>();
-    private List<GameObject> finishedMissions = new List<GameObject>();
+//    private List<GameObject> ongoingMissions = new List<GameObject>();
+//    private List<GameObject> finishedMissions = new List<GameObject>();
     private List<Dictionary<string, string>> missionDataFromCSV;    
     private int tryFetchAttempt = 0;
 
@@ -22,7 +22,7 @@ public class MissionManager : MonoBehaviour
     }
 
     //MISSION EVENT BROADCAST
-    public void MissionFinishCleanUp(string id)
+ /*   public void MissionFinishCleanUp(string id)
     {
         //update ongoing and finished mission list
         finishedMissions.Add(GetMissionById(id));
@@ -31,7 +31,7 @@ public class MissionManager : MonoBehaviour
         CheckReadyMissions();
         CheckAllComplete();
     }
-
+*/
     //MISSION FETCH FUNCTIONS
     private IEnumerator TryFetchAvailableMissions()
     {
@@ -56,6 +56,7 @@ public class MissionManager : MonoBehaviour
             Debug.LogError("Failed to fetch available mission from CSVReader");
         }
     }
+    
     private void PopulateMissions()
     {
         Debug.Log("Start populating mission");
@@ -95,14 +96,14 @@ public class MissionManager : MonoBehaviour
             }
 
             availableMissions.Add(missionObject);
-            mission.PrintMission();
+//            mission.PrintMission();
         }
 
-        CheckReadyMissions();
+        StartReadyMissions();
     }  
 
     //MISSION MANAGER GENERAL FUNCTIONS
-    private void CheckReadyMissions()
+/*    private void CheckReadyMissions()
     {
         foreach(GameObject mission in availableMissions)
         {
@@ -121,26 +122,30 @@ public class MissionManager : MonoBehaviour
 
         StartReadyMissions();
     }
-
+*/
     private void StartReadyMissions()
     {
-        for(int i = 0; i < ongoingMissions.Count; i++)
+        for (int i = 0; i < availableMissions.Count; i++)
         {
-            Mission missionComponent = ongoingMissions[i].GetComponent<Mission>();
-            if(missionComponent.MissionState == MissionState.Ready)
+            Mission mission = availableMissions[ i ].GetComponent< Mission >();
+            
+            if (mission.Unlocked == 0) continue;
+            
+            if (mission.Evaluate())
             {
-                missionComponent.StartMission();
+                Debug.Log( mission.Description );
+                EventManager.Instance.uiEvents.LogTextDisplay( mission.Description );
             }
         }
     }
 
     private void CheckAllComplete()
     {
-        if(finishedMissions.Count >= availableMissions.Count)
+ /*       if(finishedMissions.Count >= availableMissions.Count)
         {
             Debug.Log("All mission finished!");
         }
-    }
+ */   }
 
     public GameObject GetMissionById(string id)
     {

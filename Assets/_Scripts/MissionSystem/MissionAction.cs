@@ -7,27 +7,110 @@ using UnityEngine;
 [System.Serializable]
 public class MissionAction
 {
-    public string Lhs { get; set; }
-    public string Op { get; set; }
-    public string Rhs { get; set; }
-    public bool ActionFinished { get; set; } //not sure if we need this
-
-    public MissionAction(string lhs, string op, string rhs)
+    public MissionField LHS;
+    
+    private MissionField OpField;
+    public string Op
     {
-        this.Lhs = lhs;
-        this.Op = op;
-        this.Rhs = rhs;
+        get { return OpField.AsString(); }
+        set { OpField.SetString( value ); }
+    }
+    
+    public MissionField RHS;
+
+    public MissionAction(Mission owner, int index, string lhs, string op, string rhs)
+    {
+        LHS = owner.GetField( "lhs" + index );
+        LHS.SetString( lhs );
+        
+        OpField = owner.GetField( "op" + index );
+        Op = op;
+        
+        RHS = owner.GetField( "rhs" + index );
+        RHS.SetString( rhs );
     }
 
-    public void InitiateAction()
+    public bool Evaluate()
     {
-        //check if variable exist
-
-        //Evaluate()
-        //Assign
-        //CheckCondition
-    
-        ActionFinished = true;
+        Datum lhs = new Datum( LHS.AsString() );
+        Datum rhs = new Datum( RHS.AsString() );
+        int lvalue = 0;
+        int rvalue = 0;
+        
+        switch (Op)
+        {
+            case "Subtract -=":
+                lhs.SetString( "" + (lhs.AsNumber() - rhs.AsNumber()) );
+                return true;
+                
+            case "Assign =":
+                lhs.SetString( rhs.AsString() );
+                return true;
+                
+            case "Add +=":
+                lhs.SetString( "" + (lhs.AsNumber() + rhs.AsNumber()) );
+                return true;
+                
+            case "Multiply *=":
+                lhs.SetString( "" + (lhs.AsNumber() * rhs.AsNumber()) );
+                return true;
+                
+            case "Divide /=":
+                rvalue = rhs.AsNumber();
+                if (rvalue == 0)
+                {
+                    Debug.LogError( "Division by 0." );
+                    return false;
+                }
+                
+                lhs.SetString( "" + (lhs.AsNumber() / rvalue) );
+                return true;
+                
+            case "Modulo %=":
+                rvalue = rhs.AsNumber();
+                if (rvalue == 0)
+                {
+                    Debug.LogError( "Division by 0." );
+                    return false;
+                }
+                
+                lhs.SetString( "" + (lhs.AsNumber() % rvalue) );
+                return true;
+                
+            case "IsEqual ==":
+                return lhs.AsString() == rhs.AsString();
+                
+            case "IsLesser <":
+                lvalue = lhs.AsNumber();
+                rvalue = lhs.AsNumber();
+                if (lvalue == rvalue) return string.Compare( lhs.AsString(), rhs.AsString() ) < 0;
+                return lvalue < rvalue;
+                
+            case "IsGreater >":
+                lvalue = lhs.AsNumber();
+                rvalue = lhs.AsNumber();
+                if (lvalue == rvalue) return string.Compare( lhs.AsString(), rhs.AsString() ) > 0;
+                return lvalue > rvalue;
+                
+            case "Not !":
+                rvalue = lhs.AsNumber();
+                bool notted = (rvalue == 0);
+                lhs.SetString( notted ? "1" : "0" );
+                return notted;
+                
+            case "RNGFrom":
+                var random = new System.Random();
+                int outcome = random.Next( new Datum( RHS.AsString() + ".lo" ).AsNumber(), new Datum( RHS.AsString() + ".hi" ).AsNumber() );
+                lhs.SetString( "" + outcome );
+                return true;
+                
+            case "Evaluate()":
+                return lhs.AsNumber() != 0;
+                
+            default:
+                Debug.LogError( "Unrecognized op." );
+                return false;
+        }
     }
 }
 
@@ -120,7 +203,7 @@ public class Datum
         return 0;
     }
     
-    public Datum(Mission owner, string operand)
+    public Datum(string operand)
     {
         Location = operand;
         AsString = new ReadString( ReadLocation );

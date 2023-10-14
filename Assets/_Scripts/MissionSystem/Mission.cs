@@ -4,19 +4,33 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class Mission : MonoBehaviour, IComparer<MissionField>
+public class Mission : MonoBehaviour, IComparer< MissionField >
 {
     //PUBLIC PROPERTIES
-    public string Id { get; private set; }
-    public bool Unlocked { get; private set; }
-    public string Description { get; private set; }
+    public string Id
+    {
+        get { return GetField( "id" ).AsString(); }
+        set { GetField( "id" ).SetString( value ); }
+    }
+    
+    public int Unlocked
+    {
+        get { return GetField( "unlocked" ).AsNumber(); }
+        set { GetField( "unlocked" ).SetString( "" + value ); }
+    }
+    
+    public string Description
+    {
+        get { return GetField( "description" ).AsString(); }
+        set { GetField( "description" ).SetString( value ); }
+    }
+    
     public MissionState MissionState => missionState;
     [SerializeField] public List<MissionAction> MissionActions => missionActions;
 
 
     //PRIVATE VARIABLES
     private List<MissionAction> missionActions = new List<MissionAction>();
-   
     private List<MissionField> missionFields = new List<MissionField>();
 
     private MissionState missionState = MissionState.Locked;
@@ -24,104 +38,61 @@ public class Mission : MonoBehaviour, IComparer<MissionField>
     private MissionManager missionManager;
 
     public void InitializeMission(string id, string unlocked, string description)
-    {
-        this.Id = id;
-        this.Description = description;
-        this.Unlocked = int.Parse(unlocked) > 0;
-        this.missionState = int.Parse(unlocked) > 0 ? MissionState.Ready : MissionState.Locked;
+    {        
+        Id = id;
+        
+        int unlocked_number = int.Parse( unlocked );
+        Unlocked = unlocked_number;
+        
+        Description = description;
+        
+        this.missionState = unlocked_number != 0 ? MissionState.Ready : MissionState.Locked;
 
-        missionManager = GetComponentInParent<MissionManager>();
+        missionManager = GetComponentInParent< MissionManager >();
     }
 
+    //MONO BEHAVIOUR
     public void AddMissionAction(string lhs, string op, string rhs)
     {
-        MissionAction action = new MissionAction(lhs, op, rhs);
-        missionActions.Add(action);
-    }
-
-    public void PrintMission()
-    {
-        Debug.Log("Mission ID: " + Id + " | Mission Unlocked: " + Unlocked + " | Mission Description: " + Description);
-        EventManager.Instance.uiEvents.LogTextDisplay("Mission ID: " + Id + " | Mission Unlocked: " + Unlocked + " | Mission Description: " + Description);
-        for (int i = 0; i < missionActions.Count; i++)
-        {
-            string lhs = missionActions[i].Lhs;
-            string op = missionActions[i].Op;
-            string rhs = missionActions[i].Rhs;
-
-            Debug.Log(Id + " MissionAction" + (i + 1) + ": " + lhs + " " + op + " " + rhs);
-            EventManager.Instance.uiEvents.LogTextDisplay(Id + " MissionAction" + (i + 1) + ": " + lhs + " " + op + " " + rhs);
-        }
-    }
-
-    public void StartMission()
-    {
-        if (missionState == MissionState.Active) return;
-
-        missionState = MissionState.Active;
-
-        Debug.Log("Starting mission: " + Id);
-        EventManager.Instance.uiEvents.LogTextDisplay("Starting mission: " + Id);
-
-        EventManager.Instance.missionEvents.StartMission(Id);
-        ExecuteMissionActions();
-    }
-
-    private void FinishMission()
-    {
-        missionState = MissionState.Finished;
-
-        Debug.Log("Finishing mission: " + Id);
-        EventManager.Instance.uiEvents.LogTextDisplay("Finishing mission: " + Id);
-
-
-        missionManager.MissionFinishCleanUp(Id);
-
-        EventManager.Instance.missionEvents.FinishMission(Id);
-    }
-
-    public void ExecuteMissionActions()
-    {        
-        if(missionActions.Count <= 0)
-        {
-            Debug.Log("Mission " + Id + " doesn't have missionActions!");
-            return;
-        }
-        
-        for (int i = 0; i < missionActions.Count; i++)
-        {
-            missionActions[i].InitiateAction();
-
-            Debug.Log("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
-            EventManager.Instance.uiEvents.LogTextDisplay("Mission: " + Id + " | MissionAction " + missionActions[i].Lhs + " initiated");
-        }
-
-
-
-        FinishMission();
+        MissionAction action = new MissionAction( this, missionActions.Count + 1, lhs, op, rhs );
+        missionActions.Add( action );
     }
 
     public int Compare(MissionField lhs, MissionField rhs)
     {
-        return string.Compare(lhs.Name, rhs.Name);
+        return string.Compare( lhs.Name, rhs.Name );
     }
 
     public MissionField GetField(string nom)
     {
-        MissionField field = new MissionField(nom, "");
-        int index = missionFields.BinarySearch(0, missionFields.Count, field, this);
+        MissionField field = new MissionField( nom, "" );
+        int index = missionFields.BinarySearch( 0, missionFields.Count, field, this );
 
         if (index < 0)
         {
-            missionFields.Insert(~index, field);
+            missionFields.Insert( ~index, field );
             return field;
         }
-        return missionFields[index];
+        
+        return missionFields[ index ];
     }
 
     public bool Evaluate()
     {
-        return true; // for now -- TODO: write out the full process of Mission Evaluation here
+        int i = 0;
+        while (i != missionActions.Count)
+        {
+            MissionAction action =  missionActions[i];
+            ++i;
+            
+            string output = Id + " MissionAction" + i + ": " + action.LHS.AsString() + " " + action.Op + " " + action.RHS.AsString();
+            Debug.Log( output );
+            EventManager.Instance.uiEvents.LogTextDisplay( output );
+            
+            if (action.Evaluate() == false) return false;
+        }
+        
+        return true;
     }
 }
 
