@@ -152,6 +152,7 @@ public class MissionField
     }
 }
 
+[System.Serializable]
 public class Datum
 {
     private string Location { get; set; }
