@@ -16,7 +16,7 @@ public class PlayerData : MonoBehaviour
     public void LevelUp()
     {
         level += 1;
-        EventManager.Instance.ingameEvents.PlayerLevelUp(level);
+        EventManager.Instance.InGameEvents.PlayerLevelUp(level);
     } 
 
     public void AddGold(int value) => gold = Mathf.Max(0, gold + value);         

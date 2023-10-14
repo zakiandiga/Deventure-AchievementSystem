@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class IngameEvents
+public class InGameEvents
 {
     public static event Action<string, int> OnObtainItem;
     public static event Action<string, int> OnKillEnemy;

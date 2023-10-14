@@ -6,9 +6,9 @@ public class EventManager : MonoBehaviour
 {
     public static EventManager Instance { get; private set; }
 
-    public IngameEvents ingameEvents;
-    public MissionEvents missionEvents;
-    public UIEvents uiEvents;
+    public InGameEvents InGameEvents { get; private set; }
+    public MissionEvents MissionEvents { get; private set; }
+    public UIEvents UIEvents { get; private set; }
 
     private void Awake()
     {
@@ -17,8 +17,8 @@ public class EventManager : MonoBehaviour
             Instance = this;
         }
 
-        ingameEvents = new IngameEvents();
-        missionEvents = new MissionEvents();
-        uiEvents = new UIEvents();
+        InGameEvents = new InGameEvents();
+        MissionEvents = new MissionEvents();
+        UIEvents = new UIEvents();
     }
 }

@@ -57,17 +57,17 @@ public class TesterInput : MonoBehaviour
 
     private void TestStartQuest()
     {
-        EventManager.Instance.missionEvents.StartMission("MissionIntTest");
+        EventManager.Instance.MissionEvents.StartMission("MissionIntTest");
     }
 
     private void DebugObtainItem()
     {
-        EventManager.Instance.ingameEvents.ObtainItem(objectName, 1);
+        EventManager.Instance.InGameEvents.ObtainItem(objectName, 1);
     }
 
     private void DebugKillMonster()
     {
-        EventManager.Instance.ingameEvents.KillEnemy(objectName);
+        EventManager.Instance.InGameEvents.KillEnemy(objectName);
     }
 
 

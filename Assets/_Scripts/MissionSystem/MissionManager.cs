@@ -16,22 +16,32 @@ public class MissionManager : MonoBehaviour
     private List<Dictionary<string, string>> missionDataFromCSV;    
     private int tryFetchAttempt = 0;
 
+    bool missionFetched = false;
+
     private void Awake()
     {
         StartCoroutine(TryFetchAvailableMissions());
     }
 
-    //MISSION EVENT BROADCAST
- /*   public void MissionFinishCleanUp(string id)
+    private void Update()
     {
-        //update ongoing and finished mission list
-        finishedMissions.Add(GetMissionById(id));
-        ongoingMissions.Remove(GetMissionById(id));
-
-        CheckReadyMissions();
-        CheckAllComplete();
+        if(missionFetched)
+        {
+            EvaluateReadyMissions();
+        }
     }
-*/
+
+    //MISSION EVENT BROADCAST
+    /*   public void MissionFinishCleanUp(string id)
+       {
+           //update ongoing and finished mission list
+           finishedMissions.Add(GetMissionById(id));
+           ongoingMissions.Remove(GetMissionById(id));
+
+           CheckReadyMissions();
+           CheckAllComplete();
+       }
+   */
     //MISSION FETCH FUNCTIONS
     private IEnumerator TryFetchAvailableMissions()
     {
@@ -59,8 +69,7 @@ public class MissionManager : MonoBehaviour
     
     private void PopulateMissions()
     {
-        Debug.Log("Start populating mission");
-        EventManager.Instance.uiEvents.LogTextDisplay("Start populating missions");
+        Logger.UIMessage("Start populating mission");
 
         for (int i = 0; i < missionDataFromCSV.Count; ++i)
         {
@@ -98,8 +107,11 @@ public class MissionManager : MonoBehaviour
             availableMissions.Add(missionObject);
 //            mission.PrintMission();
         }
+ 
+        Logger.UIMessage(availableMissions.Count + " Missions populated");
 
-        StartReadyMissions();
+        //EvaluateReadyMissions();
+        missionFetched = true;
     }  
 
     //MISSION MANAGER GENERAL FUNCTIONS
@@ -123,18 +135,24 @@ public class MissionManager : MonoBehaviour
         StartReadyMissions();
     }
 */
-    private void StartReadyMissions()
+    private void EvaluateReadyMissions()
     {
         for (int i = 0; i < availableMissions.Count; i++)
         {
             Mission mission = availableMissions[ i ].GetComponent< Mission >();
-            
+
             if (mission.Unlocked == 0) continue;
-            
+                        
             if (mission.Evaluate())
             {
-                Debug.Log( mission.Description );
-                EventManager.Instance.uiEvents.LogTextDisplay( mission.Description );
+                //Move the log to mission.Evaluate()
+                //Debug.Log( mission.Description );
+                //EventManager.Instance.uiEvents.LogTextDisplay( mission.Description );
+            }
+
+            if(!mission.Evaluate())
+            {
+                
             }
         }
     }

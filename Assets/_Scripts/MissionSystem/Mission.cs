@@ -26,16 +26,16 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
     }
     
     public MissionState MissionState => missionState;
-    [SerializeField] public List<MissionAction> MissionActions => missionActions;
+    public List<MissionAction> MissionActions => missionActions;
 
 
-    //PRIVATE VARIABLES
-    private List<MissionAction> missionActions = new List<MissionAction>();
+    //PRIVATE VARIABLES    
+    [SerializeField] private List<MissionAction> missionActions = new List<MissionAction>();
     private List<MissionField> missionFields = new List<MissionField>();
 
     private MissionState missionState = MissionState.Locked;
 
-    private MissionManager missionManager;
+    //private MissionManager missionManager;
 
     public void InitializeMission(string id, string unlocked, string description)
     {        
@@ -47,11 +47,8 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
         Description = description;
         
         this.missionState = unlocked_number != 0 ? MissionState.Ready : MissionState.Locked;
-
-        missionManager = GetComponentInParent< MissionManager >();
     }
 
-    //MONO BEHAVIOUR
     public void AddMissionAction(string lhs, string op, string rhs)
     {
         MissionAction action = new MissionAction( this, missionActions.Count + 1, lhs, op, rhs );
@@ -79,6 +76,8 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
 
     public bool Evaluate()
     {
+        Logger.UIMessage(Id + " description: " + Description);
+
         int i = 0;
         while (i != missionActions.Count)
         {
@@ -86,8 +85,7 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
             ++i;
             
             string output = Id + " MissionAction" + i + ": " + action.LHS.AsString() + " " + action.Op + " " + action.RHS.AsString();
-            Debug.Log( output );
-            EventManager.Instance.uiEvents.LogTextDisplay( output );
+            Logger.UIMessage(output);
             
             if (action.Evaluate() == false) return false;
         }
