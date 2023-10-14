@@ -76,8 +76,6 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
 
     public bool Evaluate()
     {
-        Logger.UIMessage(Id + " description: " + Description);
-
         int i = 0;
         while (i != missionActions.Count)
         {
@@ -85,9 +83,15 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
             ++i;
             
             string output = Id + " MissionAction" + i + ": " + action.LHS.AsString() + " " + action.Op + " " + action.RHS.AsString();
-            Logger.UIMessage(output);
+            Debug.Log( output );
             
             if (action.Evaluate() == false) return false;
+        }
+        
+        if (Description != "" && Description != "NULL")
+        {
+            Debug.LogError( Description );
+            Logger.UIMessage(Id + " description: " + Description);
         }
         
         return true;

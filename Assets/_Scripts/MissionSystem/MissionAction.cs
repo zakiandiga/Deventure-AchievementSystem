@@ -100,7 +100,7 @@ public class MissionAction
                 
             case "RNGFrom":
                 var random = new System.Random();
-                int outcome = random.Next( new Datum( RHS.AsString() + ".lo" ).AsNumber(), new Datum( RHS.AsString() + ".hi" ).AsNumber() );
+                int outcome = random.Next( new Datum( RHS.AsString() + ".lo" ).AsNumber(), new Datum( RHS.AsString() + ".hi" ).AsNumber() + 1 );
                 lhs.SetString( "" + outcome );
                 return true;
                 
@@ -217,7 +217,7 @@ public class Datum
         }
         catch (FormatException)
         {
-            var values = Regex.Split( operand, "." );
+            var values = Regex.Split( operand, "\\." );
             if (values.Length == 0 || values.Length > 2 || (values.Length == 2 && values[ 1 ] == ""))
             {
                 Value = 0;
