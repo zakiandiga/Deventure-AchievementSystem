@@ -11,8 +11,4 @@ public static class Logger
         EventManager.Instance.UIEvents.LogTextDisplay(messages);
     }
 
-    public static void UIMessage(string messages, Color color)
-    {
-        
-    }
 }

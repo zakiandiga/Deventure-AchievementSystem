@@ -11,20 +11,33 @@ public class MissionManager : MonoBehaviour
     private List<Dictionary<string, string>> missionDataFromCSV;    
     private int tryFetchAttempt = 0;
 
-    bool canEvaluate = false;
+    private bool canEvaluate = false;
+    private bool hasData = false;
+    private readonly float evaluationRate = 0.7f;
 
     //FETCH FROM CSV & INITIALIZATION
-    private IEnumerator TryFetchAvailableMissions()
+    private void StartFetchingData(string docId)
     {
+        if (!hasData)
+        {
+            StartCoroutine(TryFetchAvailableMissions(docId));
+        }
+    }
+
+    private IEnumerator TryFetchAvailableMissions(string docId)
+    {
+        CSVReader.Instance.InitiateDownloadSheet(docId);
+        
         tryFetchAttempt++;
 
         while (tryFetchAttempt <= 100)
         {
-            missionDataFromCSV = CSVReader.instance.ConvertedData;
+            missionDataFromCSV = CSVReader.Instance.ConvertedData;
 
             if (missionDataFromCSV != null)
             {
                 Debug.Log("Fetch Available Missions Success");
+                hasData = true;
                 PopulateMissions();
                 break;
             }
@@ -59,8 +72,7 @@ public class MissionManager : MonoBehaviour
                 string opKey = $"op{j}";
                 string rhsKey = $"rhs{j}";
 
-                if (!missionDataFromCSV[i].ContainsKey(lhsKey)) break;          
-
+                if (!missionDataFromCSV[i].ContainsKey(lhsKey)) break;
                 if (string.IsNullOrEmpty((string)missionDataFromCSV[i][lhsKey])) break;
                 
                 string lhsValue = missionDataFromCSV[i][lhsKey];
@@ -81,11 +93,18 @@ public class MissionManager : MonoBehaviour
         Logger.UIMessage(availableMissions.Count + " Missions populated");
 
         canEvaluate = true;
+        StartCoroutine(EvaluationLoop());
     }  
 
     //MISSION MANAGER FUNCTIONS
     private void EvaluateReadyMissions()
     {
+        if(availableMissions.Count <= 0)
+        {
+            Debug.LogWarning("No mission available!");
+            return;
+        }
+
         for (int i = 0; i < availableMissions.Count; i++)
         {
             Mission mission = availableMissions[ i ].GetComponent< Mission >();
@@ -94,14 +113,6 @@ public class MissionManager : MonoBehaviour
 
             mission.Evaluate();
         }
-    }
-
-    private void PauseEvaluation(bool value)
-    {
-        canEvaluate = !value;
-        
-        string message = !canEvaluate ? "Evaluation paused!" : "Evaluation continued!";
-        Logger.UIMessage(message);
     }
 
     public GameObject GetMissionById(string id)
@@ -121,20 +132,35 @@ public class MissionManager : MonoBehaviour
     //MONO BEHAVIOUR
     private void Awake()
     {
+        UIManager.OnStartPressed += StartFetchingData;
         UIManager.OnPausePressed += PauseEvaluation;
-        StartCoroutine(TryFetchAvailableMissions());
     }
 
     private void OnDestroy()
     {
+        UIManager.OnStartPressed -= StartFetchingData;
         UIManager.OnPausePressed -= PauseEvaluation;
+        StopCoroutine(EvaluationLoop());
     }
 
-    private void Update()
+    private void PauseEvaluation(bool value)
     {
-        if (canEvaluate)
+        canEvaluate = !value;
+
+        string message = !canEvaluate ? "Evaluation paused!" : "Evaluation continued!";
+        Logger.UIMessage(message);
+    }
+
+    private IEnumerator EvaluationLoop()
+    {
+        while (true)
         {
-            EvaluateReadyMissions();
+            if (canEvaluate)
+            {
+                EvaluateReadyMissions();
+            }
+
+            yield return new WaitForSeconds(evaluationRate);
         }
     }
 }

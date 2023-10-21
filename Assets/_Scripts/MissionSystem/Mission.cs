@@ -82,8 +82,7 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
         
         if (Description != "" && Description != "NULL")
         {
-            Debug.LogError( Description );
-            Logger.UIMessage(Id + " description: " + Description);
+            Logger.UIMessage(Id + " | description: " + Description);
         }
         
         return true;

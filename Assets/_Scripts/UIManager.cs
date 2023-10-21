@@ -13,13 +13,14 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject logBoxParent;
     [SerializeField] private GameObject logBox;
 
+    public static event Action<string> OnStartPressed;
     public static event Action<bool> OnPausePressed;
 
     void Start()
     {
         UIEvents.OnLogTextSent += DisplayLogBlock;
 
-        CSVReaderInstance = CSVReader.instance;
+        CSVReaderInstance = CSVReader.Instance;
         docId = GetComponentInChildren<TMP_InputField>();
         pauseButton = GetComponentInChildren<Toggle>();
 
@@ -34,7 +35,8 @@ public class UIManager : MonoBehaviour
     public void StartButton()
     {
         string inputText = docId.text;
-        CSVReaderInstance.InitiateDownloadSheet(inputText);
+        OnStartPressed?.Invoke(inputText);
+        //CSVReaderInstance.InitiateDownloadSheet(inputText);
     }
 
     public void PauseButton()

@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 public class CSVReader : MonoBehaviour
 {
     //Singleton
-    public static CSVReader instance { get; private set; }
+    public static CSVReader Instance { get; private set; }
 
     public List<Dictionary<string, string>> ConvertedData => convertedData;
 
@@ -19,9 +19,9 @@ public class CSVReader : MonoBehaviour
 
     private void Awake()
     {
-        if(instance == null)
+        if(Instance == null)
         {
-            instance = this;
+            Instance = this;
         } 
     }
 
@@ -48,7 +48,7 @@ public class CSVReader : MonoBehaviour
             }
             else
             {
-                Debug.Log("Download error!!!");
+                Debug.LogError("Download link error!");
             }
         }
 
