@@ -1,7 +1,7 @@
 using UnityEngine;
 
 public static class Logger
-{ 
+{
     public static void UIMessage(string messages)
     {
 #if UNITY_EDITOR
@@ -11,8 +11,8 @@ public static class Logger
         EventManager.Instance.UIEvents.LogTextDisplay(messages);
     }
 
-    public static void ConsoleMessage(string messages)
+    public static void UIMessage(string messages, Color color)
     {
-        Debug.Log(messages);
+        
     }
 }

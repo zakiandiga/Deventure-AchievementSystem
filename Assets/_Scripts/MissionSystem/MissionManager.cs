@@ -1,48 +1,19 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class MissionManager : MonoBehaviour
 {
-//    [SerializeField] public List<GameObject> OngoingMissions => ongoingMissions;
-//    [SerializeField] public List<GameObject> FinishedMissions => finishedMissions;
-    [SerializeField] public List<GameObject> AvailableMissions => availableMissions;
+    public List<GameObject> AvailableMissions => availableMissions;
 
     //PRIVATE VARIABLES
-    private List<GameObject> availableMissions = new List<GameObject>();
-//    private List<GameObject> ongoingMissions = new List<GameObject>();
-//    private List<GameObject> finishedMissions = new List<GameObject>();
+    [SerializeField] private List<GameObject> availableMissions = new List<GameObject>();
     private List<Dictionary<string, string>> missionDataFromCSV;    
     private int tryFetchAttempt = 0;
 
-    bool missionFetched = false;
+    bool canEvaluate = false;
 
-    private void Awake()
-    {
-        StartCoroutine(TryFetchAvailableMissions());
-    }
-
-    private void Update()
-    {
-        if(missionFetched)
-        {
-            EvaluateReadyMissions();
-        }
-    }
-
-    //MISSION EVENT BROADCAST
-    /*   public void MissionFinishCleanUp(string id)
-       {
-           //update ongoing and finished mission list
-           finishedMissions.Add(GetMissionById(id));
-           ongoingMissions.Remove(GetMissionById(id));
-
-           CheckReadyMissions();
-           CheckAllComplete();
-       }
-   */
-    //MISSION FETCH FUNCTIONS
+    //FETCH FROM CSV & INITIALIZATION
     private IEnumerator TryFetchAvailableMissions()
     {
         tryFetchAttempt++;
@@ -65,8 +36,8 @@ public class MissionManager : MonoBehaviour
         {
             Debug.LogError("Failed to fetch available mission from CSVReader");
         }
-    }
-    
+    }    
+
     private void PopulateMissions()
     {
         Logger.UIMessage("Start populating mission");
@@ -105,36 +76,14 @@ public class MissionManager : MonoBehaviour
             }
 
             availableMissions.Add(missionObject);
-//            mission.PrintMission();
         }
  
         Logger.UIMessage(availableMissions.Count + " Missions populated");
 
-        //EvaluateReadyMissions();
-        missionFetched = true;
+        canEvaluate = true;
     }  
 
-    //MISSION MANAGER GENERAL FUNCTIONS
-/*    private void CheckReadyMissions()
-    {
-        foreach(GameObject mission in availableMissions)
-        {
-            Mission missionComponent = mission.GetComponent<Mission>();
-            if(missionComponent.MissionState == MissionState.Ready)
-            {
-                ongoingMissions.Add(mission);
-            }
-        }
-
-        if(OngoingMissions.Count <= 0)
-        {
-            Debug.Log("No ready mission available!");
-            return;
-        }
-
-        StartReadyMissions();
-    }
-*/
+    //MISSION MANAGER FUNCTIONS
     private void EvaluateReadyMissions()
     {
         for (int i = 0; i < availableMissions.Count; i++)
@@ -142,28 +91,18 @@ public class MissionManager : MonoBehaviour
             Mission mission = availableMissions[ i ].GetComponent< Mission >();
 
             if (mission.Unlocked == 0) continue;
-                        
-            if (mission.Evaluate())
-            {
-                //Move the log to mission.Evaluate()
-                //Debug.Log( mission.Description );
-                //EventManager.Instance.uiEvents.LogTextDisplay( mission.Description );
-            }
 
-            if(!mission.Evaluate())
-            {
-                
-            }
+            mission.Evaluate();
         }
     }
 
-    private void CheckAllComplete()
+    private void PauseEvaluation(bool value)
     {
- /*       if(finishedMissions.Count >= availableMissions.Count)
-        {
-            Debug.Log("All mission finished!");
-        }
- */   }
+        canEvaluate = !value;
+        
+        string message = !canEvaluate ? "Evaluation paused!" : "Evaluation continued!";
+        Logger.UIMessage(message);
+    }
 
     public GameObject GetMissionById(string id)
     {
@@ -177,5 +116,25 @@ public class MissionManager : MonoBehaviour
 
         Debug.LogError("FAILED TO GET MISSION BY ID");
         return null;
+    }
+
+    //MONO BEHAVIOUR
+    private void Awake()
+    {
+        UIManager.OnPausePressed += PauseEvaluation;
+        StartCoroutine(TryFetchAvailableMissions());
+    }
+
+    private void OnDestroy()
+    {
+        UIManager.OnPausePressed -= PauseEvaluation;
+    }
+
+    private void Update()
+    {
+        if (canEvaluate)
+        {
+            EvaluateReadyMissions();
+        }
     }
 }

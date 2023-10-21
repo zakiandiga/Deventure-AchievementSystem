@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -15,11 +14,8 @@ public class CSVReader : MonoBehaviour
     [SerializeField] private string googleSheetDocId = "";
     private string url;
 
-    private string downloadedData;
-
     //list of missions in Google Sheet, Key = sheet header, Value = corresponding row value
     private List<Dictionary<string, string>> convertedData = null;
-
 
     private void Awake()
     {
@@ -27,13 +23,6 @@ public class CSVReader : MonoBehaviour
         {
             instance = this;
         } 
-    }
-
-    private void Start()
-    {
-#if UNITY_EDITOR
-        //InitiateDownloadSheet(googleSheetDocId);
-#endif
     }
 
     public void InitiateDownloadSheet(string sheetId)

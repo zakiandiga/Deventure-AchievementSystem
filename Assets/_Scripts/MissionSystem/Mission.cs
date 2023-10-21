@@ -24,18 +24,12 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
         get { return GetField( "description" ).AsString(); }
         set { GetField( "description" ).SetString( value ); }
     }
-    
-    public MissionState MissionState => missionState;
-    public List<MissionAction> MissionActions => missionActions;
 
+    public List<MissionAction> MissionActions => missionActions;
 
     //PRIVATE VARIABLES    
     [SerializeField] private List<MissionAction> missionActions = new List<MissionAction>();
     private List<MissionField> missionFields = new List<MissionField>();
-
-    private MissionState missionState = MissionState.Locked;
-
-    //private MissionManager missionManager;
 
     public void InitializeMission(string id, string unlocked, string description)
     {        
@@ -44,9 +38,7 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
         int unlocked_number = int.Parse( unlocked );
         Unlocked = unlocked_number;
         
-        Description = description;
-        
-        this.missionState = unlocked_number != 0 ? MissionState.Ready : MissionState.Locked;
+        Description = description;        
     }
 
     public void AddMissionAction(string lhs, string op, string rhs)
@@ -96,14 +88,4 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
         
         return true;
     }
-}
-
-
-[System.Serializable]
-public enum MissionState
-{
-    Locked, //mission doesn't interact with the main system
-    Ready, //mission can be initiated from the 'mission point'
-    Active, //mission is started, listening to progress on the main system
-    Finished //similar to Locked but marked finish and can be used for checking requirement
 }

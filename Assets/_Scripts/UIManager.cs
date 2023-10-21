@@ -1,19 +1,19 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
 
 public class UIManager : MonoBehaviour
 {
     private CSVReader CSVReaderInstance;
     private TMP_InputField docId;
+    private Toggle pauseButton;
 
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private GameObject logBoxParent;
     [SerializeField] private GameObject logBox;
+
+    public static event Action<bool> OnPausePressed;
 
     void Start()
     {
@@ -21,6 +21,7 @@ public class UIManager : MonoBehaviour
 
         CSVReaderInstance = CSVReader.instance;
         docId = GetComponentInChildren<TMP_InputField>();
+        pauseButton = GetComponentInChildren<Toggle>();
 
         docId.onValueChanged.AddListener(OnInputValueChanged);
     }
@@ -34,6 +35,12 @@ public class UIManager : MonoBehaviour
     {
         string inputText = docId.text;
         CSVReaderInstance.InitiateDownloadSheet(inputText);
+    }
+
+    public void PauseButton()
+    {
+        bool status = pauseButton.isOn;
+        OnPausePressed?.Invoke(status);
     }
 
     private void OnInputValueChanged(string value)
