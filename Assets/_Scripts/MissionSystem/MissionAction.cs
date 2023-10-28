@@ -133,7 +133,7 @@ public class MissionField
     
     public int AsNumber()
     {
-        if (Text == "") return 0;
+        if (Text == "" || Text == "NULL") return 0;
         
         try
         {
