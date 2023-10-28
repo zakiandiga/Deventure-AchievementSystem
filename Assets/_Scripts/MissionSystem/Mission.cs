@@ -35,8 +35,7 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
     {        
         Id = id;
         
-        int unlocked_number = int.Parse( unlocked );
-        Unlocked = unlocked_number;
+        GetField( "unlocked" ).SetString( unlocked );
         
         Description = description;        
     }
@@ -82,7 +81,8 @@ public class Mission : MonoBehaviour, IComparer< MissionField >
         
         if (Description != "" && Description != "NULL")
         {
-            Logger.UIMessage(Id + " | description: " + Description);
+            Logger.UIMessage( Description );
+            Debug.LogError(Id + " description: " + Description);
         }
         
         return true;
