@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,6 +15,8 @@ public class MissionManager : MonoBehaviour
     private bool canEvaluate = false;
     private bool hasData = false;
     private readonly float evaluationRate = 0.7f;
+
+    public static event Action OnEvaluateMissions;
 
     //FETCH FROM CSV & INITIALIZATION
     private void StartFetchingData(string docId)
@@ -99,6 +102,8 @@ public class MissionManager : MonoBehaviour
     //MISSION MANAGER FUNCTIONS
     private void EvaluateReadyMissions()
     {
+        OnEvaluateMissions?.Invoke();
+
         if(availableMissions.Count <= 0)
         {
             Debug.LogWarning("No mission available!");

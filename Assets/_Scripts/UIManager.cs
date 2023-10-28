@@ -5,10 +5,12 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    private CSVReader CSVReaderInstance;
+    //private CSVReader CSVReaderInstance;
     private TMP_InputField docId;
     private Toggle pauseButton;
+    private int steps = 0;
 
+    [SerializeField] private TextMeshProUGUI stepsText;
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private GameObject logBoxParent;
     [SerializeField] private GameObject logBox;
@@ -19,8 +21,9 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         UIEvents.OnLogTextSent += DisplayLogBlock;
+        MissionManager.OnEvaluateMissions += UpdateStepsText;
 
-        CSVReaderInstance = CSVReader.Instance;
+        //CSVReaderInstance = CSVReader.Instance;
         docId = GetComponentInChildren<TMP_InputField>();
         pauseButton = GetComponentInChildren<Toggle>();
 
@@ -30,6 +33,7 @@ public class UIManager : MonoBehaviour
     private void OnDestroy()
     {
         UIEvents.OnLogTextSent -= DisplayLogBlock;
+        MissionManager.OnEvaluateMissions -= UpdateStepsText;
     }
 
     public void StartButton()
@@ -59,5 +63,11 @@ public class UIManager : MonoBehaviour
 
         Canvas.ForceUpdateCanvases();
         scrollRect.normalizedPosition = new Vector2(0, 0);
+    }
+
+    private void UpdateStepsText()
+    {
+        steps += 1;
+        stepsText.text = steps.ToString();
     }
 }
