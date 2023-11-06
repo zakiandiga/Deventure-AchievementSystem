@@ -82,13 +82,13 @@ public class MissionAction
                 
             case "IsLesser <":
                 lvalue = lhs.AsNumber();
-                rvalue = lhs.AsNumber();
+                rvalue = rhs.AsNumber();
                 if (lvalue == rvalue) return string.Compare( lhs.AsString(), rhs.AsString() ) < 0;
                 return lvalue < rvalue;
                 
             case "IsGreater >":
                 lvalue = lhs.AsNumber();
-                rvalue = lhs.AsNumber();
+                rvalue = rhs.AsNumber();
                 if (lvalue == rvalue) return string.Compare( lhs.AsString(), rhs.AsString() ) > 0;
                 return lvalue > rvalue;
                 
